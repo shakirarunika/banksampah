@@ -1,16 +1,21 @@
 <div class="py-6 md:py-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
-        <div class="mb-4 md:mb-8">
-            <h2 class="text-xl md:text-3xl font-black text-gray-800 tracking-tight leading-tight">
-                Selamat Datang,<br class="block md:hidden"> {{ $user->name }}
-            </h2>
-            <p class="text-[10px] md:text-sm text-gray-500 font-bold tracking-widest uppercase mt-1">
-                NIK: {{ $user->employee_code }} | Departemen: {{ $user->division->name ?? '-' }}
-            </p>
+        <div class="mb-4 md:mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <h2 class="text-xl md:text-3xl font-black text-gray-800 tracking-tight leading-tight flex flex-wrap items-center gap-3">
+                    <span>Selamat Datang,<br class="block md:hidden"> {{ $user->name }}</span>
+                    <span class="text-[10px] md:text-xs px-3 py-1 rounded-full uppercase tracking-widest font-black {{ $badge['color'] }} inline-block align-middle">
+                        {{ $badge['name'] }}
+                    </span>
+                </h2>
+                <p class="text-[10px] md:text-sm text-gray-500 font-bold tracking-widest uppercase mt-2">
+                    NIK: {{ $user->employee_code }} | Departemen: {{ $user->division->name ?? '-' }}
+                </p>
+            </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-8">
 
             <div
                 class="bg-emerald-600 rounded-2xl p-6 md:p-8 text-white shadow-lg shadow-blue-200 relative overflow-hidden">
@@ -47,6 +52,27 @@
                         {{ number_format($totalWeight ?? 0, 2) }} <span
                             class="text-sm md:text-base font-bold text-gray-400">Kg</span>
                     </h4>
+                </div>
+            </div>
+
+            <!-- ECO METRICS -->
+            <div class="bg-gradient-to-br from-teal-50 to-emerald-50 border border-teal-100 rounded-2xl p-6 md:p-8 shadow-sm flex flex-col justify-center">
+                <p class="text-teal-700 text-[10px] md:text-xs font-black uppercase tracking-widest mb-3">Dampak Lingkungan</p>
+                <div class="space-y-3">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-teal-100 p-2 rounded-lg text-xl shadow-sm">🌳</div>
+                        <div>
+                            <div class="text-[10px] font-bold text-teal-600 uppercase tracking-widest">Pohon Diselamatkan</div>
+                            <div class="text-lg font-black text-teal-800">{{ $treesSaved }} <span class="text-xs">Pohon</span></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="bg-gray-200 p-2 rounded-lg text-xl shadow-sm">☁️</div>
+                        <div>
+                            <div class="text-[10px] font-bold text-gray-600 uppercase tracking-widest">Emisi CO2 Dicegah</div>
+                            <div class="text-lg font-black text-gray-800">{{ number_format($carbonSaved, 1) }} <span class="text-xs">Kg</span></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -137,19 +163,18 @@
                 <div class="bg-white rounded-2xl shadow-sm border border-emerald-100 overflow-hidden sticky top-6">
                     <div class="p-5 bg-gradient-to-br from-emerald-600 to-emerald-700 text-white">
                         <div class="flex items-center gap-3">
-                            <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                                🏆
+                            <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm text-xl">
+                                💰
                             </div>
                             <div>
-                                <h3 class="text-xs font-black uppercase tracking-[0.2em]">Top 10 Pahlawan</h3>
-                                <p class="text-[9px] font-bold text-emerald-100 uppercase opacity-80">Dasi Aya
-                                    Sustainability</p>
+                                <h3 class="text-xs font-black uppercase tracking-[0.2em]">Top 5 Sultan Sampah</h3>
+                                <p class="text-[9px] font-bold text-emerald-100 uppercase opacity-80">Saldo Aktif Terbanyak</p>
                             </div>
                         </div>
                     </div>
 
-                    <div class="divide-y divide-gray-50">
-                        @forelse($leaderboard as $index => $hero)
+                    <div class="divide-y divide-gray-50 bg-white">
+                        @forelse($leaderboardBalance as $index => $hero)
                             <div
                                 class="p-4 flex items-center gap-3 hover:bg-emerald-50/50 transition {{ $hero->employee_code == $user->employee_code ? 'bg-emerald-50 border-l-4 border-emerald-500' : '' }}">
                                 <div
@@ -178,14 +203,62 @@
 
                                 <div class="text-right flex-shrink-0">
                                     <p class="text-[11px] font-black text-emerald-600 leading-none mb-1">
-                                        {{ number_format($hero->total_kg, 1) }} kg</p>
-                                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">Rp
-                                        {{ number_format($hero->total_rp, 0, ',', '.') }}</p>
+                                        Rp {{ number_format($hero->total_uang, 0, ',', '.') }}</p>
                                 </div>
                             </div>
                         @empty
-                            <div class="p-8 text-center text-gray-400 text-[10px] font-bold uppercase">Data belum
-                                tersedia</div>
+                            <div class="p-8 text-center text-gray-400 text-[10px] font-bold uppercase">Data belum tersedia</div>
+                        @endforelse
+                    </div>
+
+                    <!-- LEADERBOARD BERAT -->
+                    <div class="p-5 bg-gradient-to-br from-blue-600 to-blue-700 text-white border-t-4 border-white">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm text-xl">
+                                ⚖️
+                            </div>
+                            <div>
+                                <h3 class="text-xs font-black uppercase tracking-[0.2em]">Top 5 Pahlawan Bumi</h3>
+                                <p class="text-[9px] font-bold text-blue-100 uppercase opacity-80">Akumulasi Berat Sampah</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="divide-y divide-gray-50 bg-white">
+                        @forelse($leaderboardWeight as $index => $hero)
+                            <div
+                                class="p-4 flex items-center gap-3 hover:bg-blue-50/50 transition {{ $hero->employee_code == $user->employee_code ? 'bg-blue-50 border-l-4 border-blue-500' : '' }}">
+                                <div
+                                    class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0
+                                    {{ $index == 0
+                                        ? 'bg-yellow-400 text-white shadow-sm'
+                                        : ($index == 1
+                                            ? 'bg-slate-300 text-white'
+                                            : ($index == 2
+                                                ? 'bg-orange-300 text-white'
+                                                : 'bg-gray-100 text-gray-400')) }}">
+                                    {{ $index + 1 }}
+                                </div>
+
+                                <div class="flex-1 min-w-0">
+                                    <p
+                                        class="text-[11px] font-black text-gray-800 uppercase truncate leading-none mb-1">
+                                        {{ $hero->name }}
+                                        @if ($hero->employee_code == $user->employee_code)
+                                            <span class="text-[8px] text-blue-600">(Anda)</span>
+                                        @endif
+                                    </p>
+                                    <p class="text-[9px] font-bold text-gray-400 tracking-tighter uppercase">NIK:
+                                        {{ $hero->employee_code }}</p>
+                                </div>
+
+                                <div class="text-right flex-shrink-0">
+                                    <p class="text-[11px] font-black text-blue-600 leading-none mb-1">
+                                        {{ number_format($hero->total_kg, 1) }} kg</p>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="p-8 text-center text-gray-400 text-[10px] font-bold uppercase">Data belum tersedia</div>
                         @endforelse
                     </div>
 
