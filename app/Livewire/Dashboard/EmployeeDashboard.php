@@ -2,13 +2,13 @@
 
 namespace App\Livewire\Dashboard;
 
-use Livewire\Component;
-use Livewire\Attributes\Layout;
 use App\Models\Transaction;
 use App\Models\TransactionItem;
 use App\Models\Withdrawal;
-use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Layout;
+use Livewire\Component;
 
 #[Layout('layouts.app')]
 class EmployeeDashboard extends Component
@@ -24,17 +24,17 @@ class EmployeeDashboard extends Component
 
             // --- METRIK GLOBAL (Pake weighing_at agar akurat secara historis) ---
             $masuk_global = TransactionItem::whereHas('transaction', function ($q) {
-                $q->where('status', 'POSTED');
+                $q->where('status', \App\Enums\TransactionStatus::POSTED->value);
             })->sum('subtotal');
             $keluar_global = Withdrawal::whereIn('status', ['PENDING', 'COMPLETED'])->sum('amount');
             $total_uang = $masuk_global - $keluar_global;
 
             $total_kg = TransactionItem::whereHas('transaction', function ($q) {
-                $q->where('status', 'POSTED');
+                $q->where('status', \App\Enums\TransactionStatus::POSTED->value);
             })->sum('weight_kg');
 
             $my_masuk = TransactionItem::whereHas('transaction', function ($q) use ($user) {
-                $q->where('employee_id', $user->id)->where('status', 'POSTED');
+                $q->where('employee_id', $user->id)->where('status', \App\Enums\TransactionStatus::POSTED->value);
             })->sum('subtotal');
             $my_keluar = Withdrawal::where('employee_id', $user->id)->whereIn('status', ['PENDING', 'COMPLETED'])->sum('amount');
             $my_balance = $my_masuk - $my_keluar;
@@ -49,7 +49,7 @@ class EmployeeDashboard extends Component
 
                 // FIX: Gunakan 'weighing_at' BUKAN 'created_at' agar data impor Januari muncul
                 $chartData[] = TransactionItem::whereHas('transaction', function ($q) use ($date) {
-                    $q->where('status', 'POSTED')
+                    $q->where('status', \App\Enums\TransactionStatus::POSTED->value)
                         ->whereYear('weighing_at', $date->year)
                         ->whereMonth('weighing_at', $date->month);
                 })->sum('subtotal');
@@ -62,20 +62,21 @@ class EmployeeDashboard extends Component
                     'users.name',
                     'users.employee_code',
                     'divisions.name as division_name',
-                    DB::raw('COALESCE((SELECT SUM(ti.subtotal) FROM transaction_items ti JOIN transactions t ON t.id = ti.transaction_id WHERE t.employee_id = users.id AND t.status = "POSTED"), 0) as total_masuk'),
+                    DB::raw('COALESCE((SELECT SUM(ti.subtotal) FROM transaction_items ti JOIN transactions t ON t.id = ti.transaction_id WHERE t.employee_id = users.id AND t.status = "'.\App\Enums\TransactionStatus::POSTED->value.'"), 0) as total_masuk'),
                     DB::raw('COALESCE((SELECT SUM(amount) FROM withdrawals WHERE employee_id = users.id AND status IN ("PENDING", "COMPLETED")), 0) as total_keluar'),
-                    DB::raw('COALESCE((SELECT SUM(ti.weight_kg) FROM transaction_items ti JOIN transactions t ON t.id = ti.transaction_id WHERE t.employee_id = users.id AND t.status = "POSTED"), 0) as total_kg')
+                    DB::raw('COALESCE((SELECT SUM(ti.weight_kg) FROM transaction_items ti JOIN transactions t ON t.id = ti.transaction_id WHERE t.employee_id = users.id AND t.status = "'.\App\Enums\TransactionStatus::POSTED->value.'"), 0) as total_kg')
                 )
                 ->leftJoin('divisions', 'users.division_id', '=', 'divisions.id')
                 ->whereExists(function ($query) {
                     $query->select(DB::raw(1))
                         ->from('transactions')
                         ->whereColumn('transactions.employee_id', 'users.id')
-                        ->where('status', 'POSTED');
+                        ->where('status', \App\Enums\TransactionStatus::POSTED->value);
                 })
                 ->get()
                 ->map(function ($item) {
                     $item->total_uang = $item->total_masuk - $item->total_keluar;
+
                     return $item;
                 })
                 ->sortByDesc('total_uang')
@@ -102,7 +103,7 @@ class EmployeeDashboard extends Component
         // 2. JALUR KARYAWAN BIASA (NASABAH)
         // ==========================================
         $karyawan_masuk = TransactionItem::whereHas('transaction', function ($q) use ($user) {
-            $q->where('employee_id', $user->id)->where('status', 'POSTED');
+            $q->where('employee_id', $user->id)->where('status', \App\Enums\TransactionStatus::POSTED->value);
         })->sum('subtotal');
 
         $karyawan_keluar = Withdrawal::where('employee_id', $user->id)
@@ -112,7 +113,7 @@ class EmployeeDashboard extends Component
         $currentBalance = $karyawan_masuk - $karyawan_keluar;
 
         $totalWeight = TransactionItem::whereHas('transaction', function ($q) use ($user) {
-            $q->where('employee_id', $user->id)->where('status', 'POSTED');
+            $q->where('employee_id', $user->id)->where('status', \App\Enums\TransactionStatus::POSTED->value);
         })->sum('weight_kg');
 
         $leaderboard = DB::table('users')

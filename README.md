@@ -1,59 +1,88 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# ♻️ Bank Sampah (Waste Management ERP)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistem Informasi Manajemen Bank Sampah berbasis Web yang dibangun menggunakan **Laravel 12** dan **Livewire 3**. Aplikasi ini dirancang untuk memudahkan operasional pengelolaan sampah perusahaan/instansi, mulai dari penimbangan sampah karyawan, manajemen harga sampah, hingga pencairan saldo.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## ✨ Fitur Utama
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### 1. 📊 Dashboard Komprehensif
+- Tampilan metrik global dan personal (Total Uang Masuk, Total Keluar, Total Sampah/Kg).
+- Grafik interaktif tren penyetoran sampah bulanan.
+- *Leaderboard* nasabah (karyawan) dengan kontribusi sampah terbanyak.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 2. 🗃️ Manajemen Master Data
+- **Karyawan / Nasabah**: Pengelolaan data nasabah terintegrasi dengan data divisi.
+- **Divisi**: Pengelompokan karyawan berdasarkan divisi/departemen asal.
+- **Master Sampah & Harga**: Pengelolaan jenis sampah beserta harga per Kg yang dinamis.
 
-## Learning Laravel
+### 3. ⚖️ Transaksi Penimbangan (Deposit)
+- Fitur "Keranjang Timbangan" yang memungkinkan multi-input jenis sampah dalam satu struk.
+- Perhitungan otomatis *subtotal* berdasarkan harga sampah terkini.
+- Dukungan Import transaksi via Excel untuk migrasi data historis.
+- Keamanan pembatalan transaksi (*Void*) yang mencegah saldo menjadi minus.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### 4. 💸 Pencairan Saldo (Withdrawal)
+- Karyawan/Nasabah dapat mencairkan saldo hasil tabungan sampah.
+- Validasi ketat untuk memastikan penarikan tidak melebihi total saldo aktif.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## 🏗️ Arsitektur & Teknologi
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Proyek ini telah direfaktor untuk menerapkan standar **Clean Code** tingkat industri:
 
-### Premium Partners
+- **Framework**: Laravel 12.0 & PHP 8.2+
+- **Frontend**: Livewire 3 (Reactive components) & Tailwind CSS
+- **Database**: MySQL / SQLite (Development)
+- **Design Pattern**:
+  - **Service Classes**: Pemisahan logika bisnis yang rumit (seperti `DB::beginTransaction()` untuk transaksi dan void) ke dalam `TransactionService`.
+  - **Form Objects**: Validasi form Livewire diisolasi menggunakan `Livewire\Form` (contoh: `TransactionForm`).
+  - **PHP Backed Enums**: Penggunaan `App\Enums\TransactionStatus` yang kuat secara tipe data (*strongly-typed*) untuk menghindari salah ketik (typo).
+- **Performance**: Penambahan *Database Indexing* pada kolom pencarian krusial (seperti `weighing_at` dan `status`) untuk mencegah *Full Table Scan* saat data membengkak.
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+---
 
-## Contributing
+## 🚀 Cara Instalasi Lokal
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Ikuti langkah-langkah berikut untuk menjalankan aplikasi di komputer lokal:
 
-## Code of Conduct
+1. **Clone repositori ini:**
+   ```bash
+   git clone https://github.com/shakirarunika/banksampah.git
+   cd banksampah
+   ```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+2. **Install dependensi PHP & Node.js:**
+   ```bash
+   composer install
+   npm install && npm run build
+   ```
 
-## Security Vulnerabilities
+3. **Salin file konfigurasi environment:**
+   ```bash
+   cp .env.example .env
+   ```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+4. **Generate Application Key:**
+   ```bash
+   php artisan key:generate
+   ```
 
-## License
+5. **Konfigurasi Database** di file `.env`, lalu jalankan migrasi:
+   ```bash
+   php artisan migrate --seed
+   ```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+6. **Jalankan server pengembangan:**
+   ```bash
+   php artisan serve
+   ```
+
+## 🔒 Keamanan & Validasi
+Sistem ini memproteksi aksi-aksi berisiko tinggi. Contoh:
+- Admin tidak dapat menghapus akun miliknya sendiri.
+- Data Master (Sampah/User) tidak bisa dihapus jika fisik datanya masih terkait dengan riwayat transaksi yang ada, menjaga integritas riwayat finansial.
+
+---
+*Dibuat untuk pengelolaan sampah yang lebih baik dan pelestarian lingkungan.* 🌱

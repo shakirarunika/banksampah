@@ -2,29 +2,30 @@
 
 namespace App\Livewire\Transaction;
 
+use App\Imports\WasteTransactionImport;
 use App\Models\Transaction;
 use App\Models\TransactionItem;
 use App\Models\Withdrawal;
-use Livewire\Component;
-use Livewire\WithPagination;
-use Livewire\WithFileUploads;
+use App\Services\TransactionService;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
-use App\Imports\WasteTransactionImport;
+use Livewire\Component;
+use Livewire\WithFileUploads;
+use Livewire\WithPagination;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Illuminate\Support\Facades\DB;
-
 
 #[Layout('layouts.app')]
 class TransactionIndex extends Component
 {
-    // PANGGIL SEMUA TRAIT DI SINI
-    use WithPagination, WithFileUploads;
+    // Impor trait yang dibutuhkan
+    use WithFileUploads, WithPagination;
 
     public $search = '';
-    public $file_import; // INI PENYELAMAT DARI ERROR UNDEFINED VARIABLE
 
-    // Fungsi Impor Excel (Otak yang tadi ilang)
+    public $file_import;
+
+    // Fungsi untuk mengimpor transaksi dari file Excel
     public function importExcel()
     {
         $this->validate([
@@ -35,55 +36,42 @@ class TransactionIndex extends Component
             Excel::import(new WasteTransactionImport, $this->file_import->getRealPath());
 
             $this->reset('file_import');
-            session()->flash('message', 'Boom! Data historis berhasil disulap masuk ke sistem.');
+            session()->flash('message', 'Sip! Data historis berhasil diimpor ke dalam sistem.');
         } catch (\Exception $e) {
-            session()->flash('error', 'Waduh, Excel-nya ngaco: ' . $e->getMessage());
+            session()->flash('error', 'Mohon maaf, terjadi kesalahan pada file Excel: '.$e->getMessage());
         }
     }
 
-    // Fungsi Download Template (Biar petugas gak tebak-tebakan)
-    public function downloadTemplate(): BinaryFileResponse | \Illuminate\Http\RedirectResponse
+    // Fungsi untuk mengunduh template Excel
+    public function downloadTemplate(): BinaryFileResponse|\Illuminate\Http\RedirectResponse
     {
         $filePath = public_path('templates/template_bank_sampah.xlsx');
 
-        if (!file_exists($filePath)) {
+        if (! file_exists($filePath)) {
             session()->flash('error', 'File template belum ada di folder public/templates/');
+
             return redirect()->back();
         }
 
         return response()->download($filePath, 'Template_Impor_Bank_Sampah.xlsx');
     }
 
-    // Fungsi Void (Sudah gue jaga biar tetep aman)
-    public function voidTransaction($id)
+    // Fungsi untuk membatalkan (void) transaksi
+    public function voidTransaction($id, TransactionService $transactionService)
     {
         $transaction = Transaction::with('items')->find($id);
 
-        if (!$transaction || $transaction->status !== 'POSTED') {
-            session()->flash('error', 'Transaksi tidak valid atau sudah dibatalkan.');
+        if (! $transaction) {
+            session()->flash('error', 'Transaksi tidak ditemukan.');
             return;
         }
 
-        $nilai_yang_mau_dihapus = $transaction->items->sum('subtotal');
-
-        $total_masuk = TransactionItem::whereHas('transaction', function ($q) use ($transaction) {
-            $q->where('employee_id', $transaction->employee_id)
-                ->where('status', 'POSTED');
-        })->sum('subtotal');
-
-        $total_keluar = Withdrawal::where('employee_id', $transaction->employee_id)
-            ->whereIn('status', ['PENDING', 'COMPLETED'])
-            ->sum('amount');
-
-        $saldo_sekarang = $total_masuk - $total_keluar;
-
-        if (($saldo_sekarang - $nilai_yang_mau_dihapus) < 0) {
-            session()->flash('error', 'GAGAL VOID! Saldo akan minus jika dibatalkan!');
-            return;
+        try {
+            $transactionService->voidTransaction($transaction);
+            session()->flash('message', 'Transaksi berhasil dibatalkan secara aman.');
+        } catch (\Exception $e) {
+            session()->flash('error', $e->getMessage());
         }
-
-        $transaction->update(['status' => 'CANCELLED']); // Sesuaikan statusnya
-        session()->flash('message', 'Transaksi berhasil dibatalkan secara aman.');
     }
 
     public function render()
@@ -97,15 +85,16 @@ class TransactionIndex extends Component
             ->paginate(10);
 
         return view('livewire.transaction.transaction-index', [
-            'transactions' => $transactions
+            'transactions' => $transactions,
         ]);
     }
 
     public function resetAllTransactions()
     {
-        // Cek keamanan: Hanya admin yang boleh hajar!
-        if (!auth()->user()->can('access-admin')) {
-            session()->flash('error', 'Lo bukan Admin, jangan coba-kali main nuklir!');
+        // Validasi akses: Hanya Admin yang dapat melakukan reset data
+        if (! auth()->user()->can('access-admin')) {
+            session()->flash('error', 'Akses ditolak! Anda bukan Admin.');
+
             return;
         }
 
@@ -116,10 +105,10 @@ class TransactionIndex extends Component
             \App\Models\Transaction::query()->delete();
 
             DB::commit();
-            session()->flash('message', 'Bersih! Semua data transaksi sudah hangus.');
+            session()->flash('message', 'Selesai! Semua data transaksi berhasil dihapus/direset.');
         } catch (\Exception $e) {
             DB::rollBack();
-            session()->flash('error', 'Gagal reset: ' . $e->getMessage());
+            session()->flash('error', 'Gagal reset: '.$e->getMessage());
         }
     }
 }

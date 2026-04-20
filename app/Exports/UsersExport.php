@@ -39,7 +39,7 @@ class UsersExport implements FromCollection, WithHeadings, WithMapping
             'NAMA_LENGKAP',
             'EMAIL',
             'ROLE',
-            'NAMA_DIVISI'
+            'NAMA_DIVISI',
         ];
     }
 

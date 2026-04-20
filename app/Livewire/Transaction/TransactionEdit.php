@@ -3,19 +3,22 @@
 namespace App\Livewire\Transaction;
 
 use App\Models\Transaction;
+use App\Models\TransactionItem;
 use App\Models\WasteType;
 use App\Models\Withdrawal;
-use App\Models\TransactionItem;
-use Livewire\Component;
-use Livewire\Attributes\Layout;
 use DB;
+use Livewire\Attributes\Layout;
+use Livewire\Component;
 
 #[Layout('layouts.app')]
 class TransactionEdit extends Component
 {
     public Transaction $transaction;
+
     public $items = []; // Untuk nampung list sampah yang diedit
+
     public $waste_types;
+
     public $employee_name;
 
     public function mount(Transaction $transaction)
@@ -52,7 +55,7 @@ class TransactionEdit extends Component
             }
 
             $total_masuk_lama = TransactionItem::whereHas('transaction', function ($q) {
-                $q->where('employee_id', $this->transaction->employee_id)->where('status', 'POSTED');
+                $q->where('employee_id', $this->transaction->employee_id)->where('status', \App\Enums\TransactionStatus::POSTED->value);
             })->sum('subtotal');
 
             $total_keluar = Withdrawal::where('employee_id', $this->transaction->employee_id)
@@ -63,6 +66,7 @@ class TransactionEdit extends Component
 
             if (($saldo_tanpa_transaksi_ini + $total_nilai_baru) < 0) {
                 session()->flash('error', 'Gagal Update! Perubahan ini bikin saldo karyawan jadi minus.');
+
                 return;
             }
 
@@ -85,10 +89,11 @@ class TransactionEdit extends Component
 
             DB::commit();
             session()->flash('message', 'Data timbangan berhasil diperbarui!');
+
             return redirect()->route('transactions.index');
         } catch (\Exception $e) {
             DB::rollBack();
-            session()->flash('error', 'Error: ' . $e->getMessage());
+            session()->flash('error', 'Error: '.$e->getMessage());
         }
     }
 

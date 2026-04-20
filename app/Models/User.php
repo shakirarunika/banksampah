@@ -4,6 +4,8 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -13,17 +15,16 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     /**
-     * Kolom yang boleh diisi secara massal (Mass Assignment)
-     * Tambahkan kolom krusial lo di sini!
+     * Kolom yang dapat diisi secara massal (Mass Assignment).
      */
     protected $fillable = [
         'name',
         'email',
         'password',
-        'employee_code', // Wajib ada untuk NIK
-        'division_id',   // Wajib ada untuk relasi departemen
-        'role',          // Wajib ada untuk hak akses
-        'is_active',     // Untuk status karyawan
+        'employee_code', // Wajib untuk NIK
+        'division_id',   // Wajib untuk relasi departemen
+        'role',          // Wajib untuk hak akses
+        'is_active',     // Status aktif karyawan
     ];
 
     protected $hidden = [
@@ -41,57 +42,59 @@ class User extends Authenticatable
     }
 
     /* -------------------------------------------------------------------------- */
-    /* RELASI                                   */
+    /* RELASI */
     /* -------------------------------------------------------------------------- */
 
     /**
-     * Relasi ke Transaksi
+     * Relasi ke Transaksi.
+     * Satu user bisa memiliki banyak transaksi.
      */
-    public function transactions()
+    public function transactions(): HasMany
     {
         return $this->hasMany(Transaction::class, 'employee_id');
     }
 
     /**
-     * Relasi ke Divisi
+     * Relasi ke Divisi.
+     * Mengambil data divisi dari user ini.
      */
-    public function division()
+    public function division(): BelongsTo
     {
         return $this->belongsTo(Division::class);
     }
 
     /* -------------------------------------------------------------------------- */
-    /* ACCESSOR                                  */
+    /* ACCESSOR */
     /* -------------------------------------------------------------------------- */
 
     /**
      * Accessor Saldo: $user->balance
+     * Menghitung total saldo dari transaksi yang sudah di-post.
      */
     public function getBalanceAttribute()
     {
-        // Pake optional chaining atau null coalescing biar aman kalau transaksi null
         return $this->transactions()
-            ->where('status', 'POSTED')
+            ->where('status', \App\Enums\TransactionStatus::POSTED->value)
             ->with('items')
             ->get()
-            ->sum(fn($transaction) => $transaction->items->sum('subtotal'));
+            ->sum(fn ($transaction) => $transaction->items->sum('subtotal'));
     }
 
     /* -------------------------------------------------------------------------- */
-    /* HELPER ROLES                                */
+    /* HELPER ROLES */
     /* -------------------------------------------------------------------------- */
 
-    public function isAdmin()
+    public function isAdmin(): bool
     {
         return $this->role === 'admin';
     }
 
-    public function isPetugas()
+    public function isPetugas(): bool
     {
         return $this->role === 'petugas';
     }
 
-    public function isKaryawan()
+    public function isKaryawan(): bool
     {
         return $this->role === 'karyawan';
     }

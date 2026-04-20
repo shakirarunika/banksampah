@@ -2,8 +2,8 @@
 
 namespace App\Imports;
 
-use App\Models\WasteType;
 use App\Models\WastePrice;
+use App\Models\WasteType;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
@@ -27,7 +27,7 @@ class WasteTypeImport implements ToModel, WithHeadingRow
         if ($newPrice != $lastPrice) {
             WastePrice::create([
                 'waste_type_id' => $waste->id,
-                'price_per_kg'  => $newPrice,
+                'price_per_kg' => $newPrice,
                 'effective_from' => now(),
             ]);
         }

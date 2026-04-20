@@ -2,16 +2,17 @@
 
 namespace App\Livewire\Transaction;
 
-use App\Models\User;
-use App\Models\WasteType;
+use App\Imports\WasteTransactionImport;
 use App\Models\Transaction;
 use App\Models\TransactionItem;
-use Livewire\Component;
-use Livewire\Attributes\Layout;
-use Illuminate\Support\Facades\DB;
+use App\Models\User;
+use App\Models\WasteType;
 use Carbon\Carbon;
+use App\Services\TransactionService;
+use Illuminate\Support\Facades\DB;
+use App\Livewire\Forms\TransactionForm;
+use Livewire\Component;
 use Livewire\WithFileUploads;
-use App\Imports\WasteTransactionImport;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -19,13 +20,14 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 class TransactionCreate extends Component
 {
     use WithFileUploads;
+
     public $file_import;
 
     public function downloadTemplate(): BinaryFileResponse
     {
         $filePath = public_path('templates/template_bank_sampah.xlsx');
 
-        // Pastikan filenya sudah lo buat dan taruh di folder public/templates/
+        // Pastikan file template sudah disiapkan di folder public/templates/
         return response()->download($filePath, 'Template_Impor_Bank_Sampah.xlsx');
     }
 
@@ -38,29 +40,25 @@ class TransactionCreate extends Component
         try {
             Excel::import(new WasteTransactionImport, $this->file_import->getRealPath());
 
-            session()->flash('message', 'Boom! Data Januari berhasil disikat masuk semua.');
+            session()->flash('message', 'Sip! Data berhasil diimpor semua.');
+
             return redirect()->route('transactions.index');
         } catch (\Exception $e) {
-            session()->flash('error', 'Waduh, Excel-nya ngaco: ' . $e->getMessage());
+            session()->flash('error', 'Mohon maaf, terjadi kesalahan pada file Excel: '.$e->getMessage());
         }
     }
 
     // 1. Data Karyawan & Transaksi
     public $search_nik = '';
+
     public $employee;
-    public $transaction_date; // Tambahkan ini
 
-    // 2. Form Input Keranjang
-    public $selected_waste = '';
-    public $weight = '';
+    public TransactionForm $form;
 
-    // 3. Isi Keranjang (Cart)
-    public $items = [];
-
-    // Fungsi mount buat set default tanggal ke hari ini
+    // Fungsi mount untuk mengatur default tanggal ke hari ini
     public function mount()
     {
-        $this->transaction_date = now()->format('Y-m-d');
+        $this->form->initDefaultDate();
     }
 
     public function updatedSearchNik($value)
@@ -72,86 +70,54 @@ class TransactionCreate extends Component
 
     public function addItem()
     {
-        $this->validate([
-            'selected_waste' => 'required',
-            'weight' => 'required|numeric|min:0.01',
-        ], [
-            'selected_waste.required' => 'Pilih jenis sampah dulu, Bos!',
-            'weight.required' => 'Beratnya jangan kosong.',
-            'weight.min' => 'Berat minimal 0.01 kg.'
-        ]);
+        $waste = WasteType::with('currentPrice')->find($this->form->selected_waste);
 
-        $waste = WasteType::with('currentPrice')->find($this->selected_waste);
-
-        if (!$waste) {
+        if (! $waste) {
             session()->flash('error', 'Jenis sampah tidak valid.');
+
             return;
         }
 
-        $price = $waste->currentPrice->price_per_kg ?? 0;
-        $subtotal = $this->weight * $price;
-
-        $this->items[] = [
-            'waste_type_id' => $waste->id,
-            'waste_name'    => $waste->name,
-            'weight'        => (float) $this->weight,
-            'price'         => $price,
-            'subtotal'      => $subtotal
-        ];
-
-        $this->reset(['selected_waste', 'weight']);
+        $this->form->addItem($waste);
     }
 
     public function removeItem($index)
     {
-        unset($this->items[$index]);
-        $this->items = array_values($this->items);
+        $this->form->removeItem($index);
     }
 
-    public function saveTransaction()
+    public function saveTransaction(TransactionService $transactionService)
     {
-        if (!$this->employee) {
-            session()->flash('error', 'Pilih nasabah (karyawan) dulu!');
+        if (! $this->employee) {
+            session()->flash('error', 'Silakan pilih nasabah (karyawan) terlebih dahulu.');
+
             return;
         }
 
-        if (empty($this->items)) {
+        if (empty($this->form->items)) {
             session()->flash('error', 'Keranjang timbangan masih kosong!');
+
             return;
         }
 
-        // Tambahkan validasi tanggal
-        $this->validate(['transaction_date' => 'required|date|before_or_equal:today']);
+        // Jalankan validasi khusus tanggal pada form object
+        $this->form->validate();
 
-        DB::beginTransaction();
         try {
-            // Gabungkan tanggal input dengan jam sekarang supaya urutan transaksi tetep rapi
-            $weighingDateTime = Carbon::parse($this->transaction_date . ' ' . now()->format('H:i:s'));
+            // Gabungkan tanggal input dengan waktu saat ini agar urutan transaksi tetap rapi
+            $weighingDateTime = Carbon::parse($this->form->transaction_date.' '.now()->format('H:i:s'));
 
-            $transaction = Transaction::create([
+            $transactionService->createTransaction([
                 'employee_id' => $this->employee->id,
-                'officer_id'  => auth()->id(),
-                'weighing_at' => $weighingDateTime, // Pake tanggal pilihan user
-                'status'      => 'POSTED',
-            ]);
-
-            foreach ($this->items as $item) {
-                TransactionItem::create([
-                    'transaction_id' => $transaction->id,
-                    'waste_type_id'  => $item['waste_type_id'],
-                    'weight_kg'      => $item['weight'],
-                    'price_at_time'  => $item['price'],
-                    'subtotal'       => $item['subtotal'],
-                ]);
-            }
-
-            DB::commit();
+                'officer_id' => auth()->id(),
+                'weighing_at' => $weighingDateTime,
+            ], $this->form->items);
 
             session()->flash('message', 'Timbangan berhasil disimpan!');
+
             return redirect()->route('transactions.index');
         } catch (\Exception $e) {
-            DB::rollBack();
-            session()->flash('error', 'Gagal menyimpan data: ' . $e->getMessage());
+            session()->flash('error', 'Gagal menyimpan data: '.$e->getMessage());
         }
     }
 
@@ -160,7 +126,7 @@ class TransactionCreate extends Component
         $wasteTypes = WasteType::with('currentPrice')->get();
 
         return view('livewire.transaction.transaction-create', [
-            'wasteTypes' => $wasteTypes
+            'wasteTypes' => $wasteTypes,
         ]);
     }
 }

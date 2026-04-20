@@ -40,7 +40,7 @@
                                 </path>
                             </svg>
                         </div>
-                        <input wire:model.live="transaction_date" type="date"
+                        <input wire:model.live="form.transaction_date" type="date"
                             class="block w-full pl-10 pr-4 py-3 bg-white border-emerald-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-bold text-slate-700 transition-all text-sm shadow-sm" />
                     </div>
                 </div>
@@ -74,7 +74,7 @@
 
                     <div class="space-y-4 mt-4">
                         <div>
-                            <select wire:model="selected_waste"
+                            <select wire:model="form.selected_waste"
                                 class="w-full border-gray-300 rounded-md text-xs font-bold uppercase focus:border-emerald-500 focus:ring-emerald-500">
                                 <option value="">-- PILIH JENIS SAMPAH --</option>
                                 @foreach ($wasteTypes as $wt)
@@ -82,20 +82,20 @@
                                         {{ number_format($wt->currentPrice->price_per_kg ?? 0) }}/Kg)</option>
                                 @endforeach
                             </select>
-                            @error('selected_waste')
+                            @error('form.selected_waste')
                                 <span class="text-red-500 text-[10px] font-bold">{{ $message }}</span>
                             @enderror
                         </div>
 
                         <div>
                             <div class="relative">
-                                <input type="number" step="0.01" wire:model="weight" placeholder="0.00"
+                                <input type="number" step="0.01" wire:model="form.weight" placeholder="0.00"
                                     class="w-full border-gray-300 rounded-md text-2xl font-black text-right text-emerald-600 focus:border-emerald-500 pr-12">
                                 <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
                                     <span class="text-gray-400 font-bold text-sm">KG</span>
                                 </div>
                             </div>
-                            @error('weight')
+                            @error('form.weight')
                                 <span class="text-red-500 text-[10px] font-bold">{{ $message }}</span>
                             @enderror
                         </div>
@@ -115,9 +115,9 @@
                     <h3
                         class="font-black text-gray-700 uppercase tracking-tighter border-b pb-3 mb-4 text-sm flex items-center justify-between">
                         <span>🛒 Keranjang Timbangan</span>
-                        @if (count($items ?? []) > 0)
+                        @if (count($form->items ?? []) > 0)
                             <span
-                                class="text-[10px] text-gray-400 font-bold bg-gray-100 px-2 py-1 rounded">{{ count($items) }}
+                                class="text-[10px] text-gray-400 font-bold bg-gray-100 px-2 py-1 rounded">{{ count($form->items) }}
                                 Item</span>
                         @endif
                     </h3>
@@ -134,7 +134,7 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-50">
-                                @forelse($items ?? [] as $index => $item)
+                                @forelse($form->items ?? [] as $index => $item)
                                     <tr class="hover:bg-gray-50 transition" wire:key="cart-{{ $index }}">
                                         <td class="py-3 font-bold text-gray-800 text-xs">{{ $item['waste_name'] }}</td>
                                         <td class="py-3 text-right font-medium text-emerald-600">
@@ -165,13 +165,13 @@
                             <span class="text-xs font-black text-gray-400 uppercase tracking-widest">Total Saldo
                                 Diterima:</span>
                             <span class="text-3xl font-black text-green-600 tracking-tighter">
-                                Rp {{ number_format(collect($items ?? [])->sum('subtotal')) }}
+                                Rp {{ number_format(collect($form->items ?? [])->sum('subtotal')) }}
                             </span>
                         </div>
 
                         <button wire:click="saveTransaction"
                             class="w-full py-4 bg-green-600 text-white font-black rounded-lg uppercase tracking-widest text-sm hover:bg-green-700 transition shadow-lg shadow-green-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                            {{ count($items ?? []) == 0 || !$employee ? 'disabled' : '' }}>
+                            {{ count($form->items ?? []) == 0 || !$employee ? 'disabled' : '' }}>
                             SIMPAN TRANSAKSI
                         </button>
                     </div>

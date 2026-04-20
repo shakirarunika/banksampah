@@ -2,15 +2,15 @@
 
 namespace App\Imports;
 
-use App\Models\User;
-use App\Models\WasteType;
 use App\Models\Transaction;
 use App\Models\TransactionItem;
+use App\Models\User;
+use App\Models\WasteType;
+use Carbon\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Illuminate\Support\Collection;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Shared\Date; // WAJIB ADA BUAT KONVERSI EXCEL
 
 class WasteTransactionImport implements ToCollection, WithHeadingRow
@@ -22,13 +22,17 @@ class WasteTransactionImport implements ToCollection, WithHeadingRow
             foreach ($rows as $row) {
                 // 1. Cari Karyawan berdasarkan NIK (Header di Excel harus: nik)
                 $user = User::where('employee_code', $row['nik'])->first();
-                if (!$user) continue;
+                if (! $user) {
+                    continue;
+                }
 
                 // 2. Cari Jenis Sampah (Header di Excel harus: jenis_sampah)
                 $waste = WasteType::with('currentPrice')
-                    ->where('name', 'like', '%' . $row['jenis_sampah'] . '%')
+                    ->where('name', 'like', '%'.$row['jenis_sampah'].'%')
                     ->first();
-                if (!$waste) continue;
+                if (! $waste) {
+                    continue;
+                }
 
                 $price = $waste->currentPrice->price_per_kg ?? 0;
                 $weight = (float) $row['berat']; // Header di Excel: berat
@@ -51,18 +55,18 @@ class WasteTransactionImport implements ToCollection, WithHeadingRow
                 // 4. Buat Transaksi Induk
                 $transaction = Transaction::create([
                     'employee_id' => $user->id,
-                    'officer_id'  => auth()->id(),
+                    'officer_id' => auth()->id(),
                     'weighing_at' => $weighingAt,
-                    'status'      => 'POSTED',
+                    'status' => \App\Enums\TransactionStatus::POSTED->value,
                 ]);
 
                 // 5. Buat Item Transaksi
                 TransactionItem::create([
                     'transaction_id' => $transaction->id,
-                    'waste_type_id'  => $waste->id,
-                    'weight_kg'      => $weight,
-                    'price_at_time'  => $price,
-                    'subtotal'       => $weight * $price,
+                    'waste_type_id' => $waste->id,
+                    'weight_kg' => $weight,
+                    'price_at_time' => $price,
+                    'subtotal' => $weight * $price,
                 ]);
             }
             DB::commit();

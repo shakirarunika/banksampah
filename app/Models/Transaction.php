@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Transaction extends Model
 {
@@ -19,29 +20,29 @@ class Transaction extends Model
 
     protected $casts = [
         'weighing_at' => 'datetime',
+        'status' => \App\Enums\TransactionStatus::class,
     ];
 
     /**
-     * Relasi: Transaksi ini milik si Karyawan (yang punya sampah)
+     * Relasi ke User: Nasabah/Karyawan pemilik transaksi ini.
      */
-    public function employee()
+    public function employee(): BelongsTo
     {
         return $this->belongsTo(User::class, 'employee_id');
     }
 
     /**
-     * Relasi: Transaksi ini dicatat oleh si Petugas
-     * INI YANG TADI HILANG DAN BIKIN ERROR
+     * Relasi ke User: Petugas yang mencatat transaksi.
      */
-    public function officer()
+    public function officer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'officer_id');
     }
 
     /**
-     * Relasi: Satu transaksi punya banyak item sampah (kardus, plastik, dll)
+     * Relasi ke TransactionItem: Detail item sampah dalam transaksi.
      */
-    public function items()
+    public function items(): HasMany
     {
         return $this->hasMany(TransactionItem::class);
     }

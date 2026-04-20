@@ -1,14 +1,14 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Livewire\Dashboard\EmployeeDashboard;
+use App\Livewire\Master\DivisionManagement;
+use App\Livewire\Master\UserManagement;
+use App\Livewire\Master\WasteManagement;
 use App\Livewire\Transaction\TransactionCreate;
 use App\Livewire\Transaction\TransactionIndex;
-use App\Livewire\Master\WasteManagement;
-use App\Livewire\Master\UserManagement;
-use App\Livewire\Master\DivisionManagement;
-use App\Livewire\Dashboard\EmployeeDashboard;
-use App\Models\Withdrawal;
 use App\Livewire\Transaction\WithdrawalCreate;
+use App\Models\Withdrawal;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     // Kalau dia sudah login, lempar ke Dashboard
@@ -55,4 +55,4 @@ Route::middleware(['auth'])->group(function () {
     });
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

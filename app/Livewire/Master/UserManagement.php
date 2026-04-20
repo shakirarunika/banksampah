@@ -2,30 +2,43 @@
 
 namespace App\Livewire\Master;
 
-use App\Models\User;
-use App\Models\Division;
-use Livewire\Component;
-use Livewire\WithPagination;
-use Livewire\Attributes\Layout;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
-use Livewire\WithFileUploads;
-
-// --- DUA BARIS INI WAJIB ADA BIAR EXCEL JALAN ---
-use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\UsersExport;
 use App\Imports\UsersImport;
+use App\Models\Division;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+use Livewire\Attributes\Layout;
+use Livewire\Component;
+// --- DUA BARIS INI WAJIB ADA BIAR EXCEL JALAN ---
+use Livewire\WithFileUploads;
+use Livewire\WithPagination;
+use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('layouts.app')]
 class UserManagement extends Component
 {
-    use WithPagination;
     use WithFileUploads;
+    use WithPagination;
 
     public $file_excel;
-    public $name, $employee_code, $email, $division_id, $role = 'karyawan', $is_active = true;
+
+    public $name;
+
+    public $employee_code;
+
+    public $email;
+
+    public $division_id;
+
+    public $role = 'karyawan';
+
+    public $is_active = true;
+
     public $search = '';
+
     public $userId;
+
     public $isEditMode = false;
 
     // Reset pagination kalau lagi cari nama
@@ -43,7 +56,7 @@ class UserManagement extends Component
     // 2. Fungsi Export Data
     public function exportExcel()
     {
-        return Excel::download(new UsersExport(false), 'data_karyawan_tgl_' . now()->format('d_m_Y') . '.xlsx');
+        return Excel::download(new UsersExport(false), 'data_karyawan_tgl_'.now()->format('d_m_Y').'.xlsx');
     }
 
     // 3. Fungsi Import Data
@@ -60,7 +73,7 @@ class UserManagement extends Component
             session()->flash('message', 'Data berhasil diimport dari Excel!');
         } catch (\Exception $e) {
             // Kasih tau error spesifiknya kalau gagal
-            session()->flash('error', 'Gagal import! Pastikan nama divisi sesuai. Detail: ' . $e->getMessage());
+            session()->flash('error', 'Gagal import! Pastikan nama divisi sesuai. Detail: '.$e->getMessage());
         }
     }
 
@@ -69,19 +82,21 @@ class UserManagement extends Component
         $user = \App\Models\User::findOrFail($id);
 
         // PROTEKSI 1: Jangan biarkan Admin hapus dirinya sendiri pas lagi login
-        if ($user->id === auth()->id()) {
-            session()->flash('error', 'Lo nggak bisa hapus akun lo sendiri, Bos!');
+        if ($id == auth()->id()) {
+            session()->flash('error', 'Anda tidak diizinkan untuk menghapus akun Anda sendiri.');
+
             return;
         }
 
         // PROTEKSI 2: Cek keterlibatan di tabel Transaksi (Sebagai Nasabah ATAU Petugas)
-        // Sesuaikan nama kolom ('employee_id' / 'user_id' dan 'officer_id') dengan yang ada di database lo
+        // Sesuaikan nama kolom ('employee_id' / 'user_id' dan 'officer_id') dengan yang ada di database
         $isTiedToTransaction = \App\Models\Transaction::where('employee_id', $user->id)
             ->orWhere('officer_id', $user->id)
             ->exists();
 
         if ($isTiedToTransaction) {
             session()->flash('error', 'GAGAL: Karyawan ini tidak bisa dihapus karena datanya terikat di Riwayat Transaksi (sebagai nasabah atau petugas). Coba ubah statusnya jadi Non-Aktif saja.');
+
             return;
         }
 
@@ -131,7 +146,7 @@ class UserManagement extends Component
             User::create([
                 'name' => $this->name,
                 'employee_code' => $this->employee_code,
-                'email' => $this->email ?? $this->employee_code . '@bank.sampah',
+                'email' => $this->email ?? $this->employee_code.'@bank.sampah',
                 'password' => Hash::make($this->employee_code),
                 'division_id' => $this->division_id,
                 'role' => $this->role,
@@ -159,7 +174,7 @@ class UserManagement extends Component
                 })
                 ->latest()
                 ->paginate(10),
-            'divisions' => Division::all()
+            'divisions' => Division::all(),
         ]);
     }
 }

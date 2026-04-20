@@ -13,7 +13,7 @@ class WastePrice extends Model
         'effective_from',
         'effective_to',
         'user_id',
-        'created_by'
+        'created_by',
     ];
 
     public function admin()

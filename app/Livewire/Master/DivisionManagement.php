@@ -2,23 +2,28 @@
 
 namespace App\Livewire\Master;
 
-use App\Models\Division;
-use Livewire\Component;
-use Livewire\WithPagination;
-use Livewire\WithFileUploads;
-use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\DivisionsExport;
 use App\Imports\DivisionsImport;
+use App\Models\Division;
 use Livewire\Attributes\Layout;
+use Livewire\Component;
+use Livewire\WithFileUploads;
+use Livewire\WithPagination;
+use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('layouts.app')]
 class DivisionManagement extends Component
 {
-    use WithPagination, WithFileUploads;
+    use WithFileUploads, WithPagination;
 
-    public $name, $divisionId;
+    public $name;
+
+    public $divisionId;
+
     public $isEditMode = false;
+
     public $search = '';
+
     public $file_excel;
 
     public function downloadTemplate()
@@ -28,7 +33,7 @@ class DivisionManagement extends Component
 
     public function exportExcel()
     {
-        return Excel::download(new DivisionsExport(false), 'data_divisi_' . now()->format('d_m_Y') . '.xlsx');
+        return Excel::download(new DivisionsExport(false), 'data_divisi_'.now()->format('d_m_Y').'.xlsx');
     }
 
     public function importExcel()
@@ -40,13 +45,13 @@ class DivisionManagement extends Component
             session()->flash('message', 'Data divisi berhasil diimport!');
         } catch (\Exception $e) {
             // GANTI BARIS INI BIAR KELIHATAN ERROR ASLINYA
-            session()->flash('error', 'Gagal: ' . $e->getMessage());
+            session()->flash('error', 'Gagal: '.$e->getMessage());
         }
     }
 
     public function save()
     {
-        $this->validate(['name' => 'required|unique:divisions,name,' . $this->divisionId]);
+        $this->validate(['name' => 'required|unique:divisions,name,'.$this->divisionId]);
 
         Division::updateOrCreate(
             ['id' => $this->divisionId],
@@ -62,7 +67,8 @@ class DivisionManagement extends Component
         $division = \App\Models\Division::findOrFail($id);
 
         if ($division->users()->count() > 0) {
-            session()->flash('error', 'Gagal hapus! Masih ada ' . $division->users()->count() . ' karyawan di divisi ini.');
+            session()->flash('error', 'Gagal hapus! Masih ada '.$division->users()->count().' karyawan di divisi ini.');
+
             return;
         }
 
@@ -86,9 +92,9 @@ class DivisionManagement extends Component
     public function render()
     {
         return view('livewire.master.division-management', [
-            'divisions' => Division::where('name', 'like', '%' . $this->search . '%')
+            'divisions' => Division::where('name', 'like', '%'.$this->search.'%')
                 ->latest()
-                ->paginate(10)
+                ->paginate(10),
         ]);
     }
 }
