@@ -64,49 +64,59 @@
                     </div>
 
                     <div class="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden">
-                        <div class="hidden md:grid grid-cols-12 gap-4 p-4 bg-slate-100 border-b border-slate-200 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                        <div class="hidden md:grid grid-cols-12 gap-4 p-4 border-b border-slate-200 bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                             <div class="col-span-4">Kategori Sampah</div>
-                            <div class="col-span-3">Berat (Kg)</div>
-                            <div class="col-span-4">Harga Terjual (Rp)</div>
+                            <div class="col-span-2 text-right pr-4">Berat (Kg)</div>
+                            <div class="col-span-3 text-right pr-4">Harga / Kg</div>
+                            <div class="col-span-2 text-right pr-4">Total Harga</div>
                             <div class="col-span-1 text-center">Aksi</div>
                         </div>
 
-                        <div class="p-4 space-y-4 md:space-y-0">
+                        <div class="p-4 space-y-4">
                             @foreach ($items as $index => $item)
-                                <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center {{ $loop->index > 0 ? 'pt-4 border-t border-slate-200 md:border-t-0 md:pt-0' : '' }}">
-                                    <!-- Mobile Labels (Only visible on small screens) -->
-                                    
-                                    <div class="col-span-1 md:col-span-4">
-                                        <label class="md:hidden text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Kategori Sampah</label>
-                                        <select wire:model="items.{{ $index }}.waste_type_id" class="w-full border-2 border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 focus:border-orange-500 focus:ring-0 transition bg-white">
-                                            <option value="">-- Pilih --</option>
-                                            @foreach($wasteTypes as $type)
-                                                <option value="{{ $type->id }}">{{ $type->name }}</option>
+                                <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center bg-white p-4 rounded-xl border border-slate-100 shadow-sm transition-all hover:shadow-md">
+                                        
+                                    <div class="md:col-span-4">
+                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block md:hidden">Kategori Sampah</label>
+                                        <select wire:model.live="items.{{ $index }}.waste_type_id" class="w-full border-2 border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-700 focus:border-blue-500 focus:ring-0 transition">
+                                            <option value="">-- Pilih Sampah --</option>
+                                            @foreach($wasteTypes as $waste)
+                                                <option value="{{ $waste->id }}">{{ $waste->name }}</option>
                                             @endforeach
                                         </select>
-                                        @error("items.{$index}.waste_type_id") <span class="text-red-500 text-[9px] font-bold block mt-1 uppercase tracking-widest">{{ $message }}</span> @enderror
+                                        @error('items.'.$index.'.waste_type_id') <span class="text-red-500 text-[9px] font-bold block mt-1 uppercase tracking-widest">{{ $message }}</span> @enderror
                                     </div>
 
-                                    <div class="col-span-1 md:col-span-3">
-                                        <label class="md:hidden text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Berat (Kg)</label>
+                                    <div class="md:col-span-2">
+                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block md:hidden">Berat (Kg)</label>
                                         <div class="relative">
-                                            <input type="number" step="0.01" wire:model.live.debounce.500ms="items.{{ $index }}.weight_kg" class="w-full pr-10 border-2 border-slate-200 rounded-xl p-3 text-sm font-black text-right text-slate-800 focus:border-orange-500 focus:ring-0 transition placeholder:text-slate-300" placeholder="0.00">
+                                            <input type="number" step="0.01" wire:model.live.debounce.500ms="items.{{ $index }}.weight_kg" class="w-full pr-8 border-2 border-slate-200 rounded-xl p-3 text-sm font-black text-right text-slate-700 focus:border-blue-500 focus:ring-0 transition placeholder:text-slate-300" placeholder="0.00">
                                             <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                                <span class="text-slate-400 font-black text-xs">Kg</span>
+                                                <span class="text-slate-400 font-black text-xs">kg</span>
                                             </div>
                                         </div>
-                                        @error("items.{$index}.weight_kg") <span class="text-red-500 text-[9px] font-bold block mt-1 uppercase tracking-widest">{{ $message }}</span> @enderror
+                                        @error('items.'.$index.'.weight_kg') <span class="text-red-500 text-[9px] font-bold block mt-1 uppercase tracking-widest">{{ $message }}</span> @enderror
                                     </div>
 
-                                    <div class="col-span-1 md:col-span-4">
-                                        <label class="md:hidden text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Harga Terjual</label>
+                                    <div class="md:col-span-3">
+                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block md:hidden">Harga / Kg</label>
                                         <div class="relative">
                                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                                 <span class="text-slate-400 font-black text-xs">Rp</span>
                                             </div>
-                                            <input type="number" wire:model.live.debounce.500ms="items.{{ $index }}.total_price" class="w-full pl-10 border-2 border-slate-200 rounded-xl p-3 text-sm font-black text-right text-orange-600 focus:border-orange-500 focus:ring-0 transition placeholder:text-slate-300" placeholder="0">
+                                            <input type="number" readonly wire:model="items.{{ $index }}.price_per_kg" class="w-full pl-8 border-2 border-slate-100 bg-slate-50 rounded-xl p-3 text-sm font-black text-right text-slate-500 focus:ring-0 transition cursor-not-allowed">
                                         </div>
-                                        @error("items.{$index}.total_price") <span class="text-red-500 text-[9px] font-bold block mt-1 uppercase tracking-widest">{{ $message }}</span> @enderror
+                                    </div>
+
+                                    <div class="md:col-span-2">
+                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block md:hidden">Total Harga</label>
+                                        <div class="relative">
+                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <span class="text-orange-400 font-black text-xs">Rp</span>
+                                            </div>
+                                            <input type="number" readonly wire:model="items.{{ $index }}.total_price" class="w-full pl-8 border-2 border-orange-100 bg-orange-50/50 rounded-xl p-3 text-sm font-black text-right text-orange-600 focus:ring-0 transition cursor-not-allowed">
+                                        </div>
+                                        @error('items.'.$index.'.total_price') <span class="text-red-500 text-[9px] font-bold block mt-1 uppercase tracking-widest">{{ $message }}</span> @enderror
                                     </div>
 
                                     <div class="col-span-1 flex justify-end md:justify-center">

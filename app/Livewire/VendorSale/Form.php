@@ -39,9 +39,11 @@ class Form extends Component
             }
             
             foreach ($sale->items as $item) {
+                $pricePerKg = $item->weight_kg > 0 ? $item->total_price / $item->weight_kg : 0;
                 $this->items[] = [
                     'waste_type_id' => $item->waste_type_id,
                     'weight_kg' => $item->weight_kg,
+                    'price_per_kg' => $pricePerKg,
                     'total_price' => $item->total_price,
                 ];
             }
@@ -51,12 +53,41 @@ class Form extends Component
         }
     }
 
+    public function updatedItems($value, $name)
+    {
+        $parts = explode('.', $name);
+        if (count($parts) === 2) {
+            $index = $parts[0];
+            $field = $parts[1];
+
+            if ($field === 'waste_type_id') {
+                $waste = WasteType::with('currentPrice')->find($value);
+                if ($waste && $waste->currentPrice) {
+                    $this->items[$index]['price_per_kg'] = $waste->currentPrice->price_per_kg;
+                } else {
+                    $this->items[$index]['price_per_kg'] = 0;
+                }
+                $this->calculateItemTotal($index);
+            } elseif ($field === 'weight_kg') {
+                $this->calculateItemTotal($index);
+            }
+        }
+    }
+
+    public function calculateItemTotal($index)
+    {
+        $weight = (float) ($this->items[$index]['weight_kg'] ?? 0);
+        $pricePerKg = (float) ($this->items[$index]['price_per_kg'] ?? 0);
+        $this->items[$index]['total_price'] = $weight * $pricePerKg;
+    }
+
     public function addItem()
     {
         $this->items[] = [
             'waste_type_id' => '',
             'weight_kg' => '',
-            'total_price' => '',
+            'price_per_kg' => 0,
+            'total_price' => 0,
         ];
     }
 
