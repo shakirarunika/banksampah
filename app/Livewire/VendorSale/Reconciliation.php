@@ -25,7 +25,7 @@ class Reconciliation extends Component
             $q->whereMonth('weighing_at', $this->month)
               ->whereYear('weighing_at', $this->year)
               // Hanya hitung yang sudah POSTED / bukan CANCELLED
-              ->where('status', '!=', 'CANCELLED');
+              ->where('status', '!=', \App\Enums\TransactionStatus::CANCELLED->value);
         })->get();
 
         $totalInboundKg = $inboundItems->sum('weight_kg');
