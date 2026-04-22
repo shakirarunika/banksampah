@@ -67,7 +67,9 @@ class Reconciliation extends Component
 
         return view('livewire.vendor-sale.reconciliation', compact(
             'totalInboundKg',
+            'totalInboundPrice',
             'totalOutboundKg',
+            'totalOutboundPrice',
             'shrinkageKg',
             'shrinkagePercent',
             'profitMargin',
