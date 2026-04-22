@@ -51,6 +51,14 @@ new class extends Component {
                         @endcan
 
                         @can('access-admin')
+                            <x-nav-link :href="route('vendor-sales.index')" :active="request()->routeIs('vendor-sales.*')" wire:navigate>
+                                <span class="font-black text-[10px] uppercase tracking-widest text-orange-600">{{ __('Penjualan Vendor') }}</span>
+                            </x-nav-link>
+
+                            <x-nav-link :href="route('reconciliation.index')" :active="request()->routeIs('reconciliation.*')" wire:navigate>
+                                <span class="font-black text-[10px] uppercase tracking-widest text-blue-600">{{ __('Rekonsiliasi') }}</span>
+                            </x-nav-link>
+
                             <div class="hidden sm:flex sm:items-center sm:ms-2">
                                 <x-dropdown align="right" width="48">
                                     <x-slot name="trigger">
@@ -143,6 +151,14 @@ new class extends Component {
                     </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('withdrawals.index')" :active="request()->routeIs('withdrawals.*')" wire:navigate class="text-red-600 font-bold">
                         {{ __('Pencairan Saldo') }}
+                    </x-responsive-nav-link>
+                @endcan
+                @can('access-admin')
+                    <x-responsive-nav-link :href="route('vendor-sales.index')" :active="request()->routeIs('vendor-sales.*')" wire:navigate class="text-orange-600 font-bold">
+                        {{ __('Penjualan Vendor') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('reconciliation.index')" :active="request()->routeIs('reconciliation.*')" wire:navigate class="text-blue-600 font-bold">
+                        {{ __('Rekonsiliasi Bulanan') }}
                     </x-responsive-nav-link>
                 @endcan
             </div>

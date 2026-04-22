@@ -52,6 +52,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/master/sampah', WasteManagement::class)->name('master.waste');
         Route::get('/master/karyawan', UserManagement::class)->name('master.users');
         Route::get('/master/divisi', DivisionManagement::class)->name('master.division');
+
+        // Vendor Sales & Reconciliation
+        Route::get('/vendor-sales', \App\Livewire\VendorSale\Index::class)->name('vendor-sales.index');
+        Route::get('/vendor-sales/create', \App\Livewire\VendorSale\Form::class)->name('vendor-sales.create');
+        Route::get('/vendor-sales/{id}/edit', \App\Livewire\VendorSale\Form::class)->name('vendor-sales.edit');
+        Route::get('/reconciliation', \App\Livewire\VendorSale\Reconciliation::class)->name('reconciliation.index');
     });
 });
 
