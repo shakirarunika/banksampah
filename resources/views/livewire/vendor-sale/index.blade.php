@@ -43,9 +43,9 @@
                         <tr class="bg-slate-50/80 text-slate-500 font-black uppercase text-[10px] tracking-[0.2em] border-b border-slate-100">
                             <th class="p-6">Tanggal Penjualan</th>
                             <th class="p-6">Vendor Pengangkut</th>
-                            <th class="p-6">Kategori Sampah</th>
-                            <th class="p-6 text-right">Berat (Kg)</th>
-                            <th class="p-6 text-right">Total Harga (Rp)</th>
+                            <th class="p-6">Rincian Sampah</th>
+                            <th class="p-6 text-right">Total Berat (Kg)</th>
+                            <th class="p-6 text-right">Total Pendapatan (Rp)</th>
                             <th class="p-6 text-center">Aksi</th>
                         </tr>
                     </thead>
@@ -59,15 +59,19 @@
                                     <div class="font-black text-slate-800 uppercase text-xs">{{ $sale->vendor_name }}</div>
                                 </td>
                                 <td class="p-6">
-                                    <span class="px-3 py-1 bg-slate-100 border border-slate-200 text-slate-600 rounded text-[9px] font-black uppercase tracking-tighter">
-                                        {{ $sale->wasteType->name }}
-                                    </span>
+                                    <div class="flex flex-wrap gap-1.5 max-w-[200px]">
+                                        @foreach ($sale->items as $item)
+                                            <span class="px-2 py-0.5 bg-slate-100 border border-slate-200 text-slate-600 rounded text-[9px] font-black uppercase tracking-tighter" title="{{ $item->weight_kg }} kg = Rp {{ number_format($item->total_price, 0, ',', '.') }}">
+                                                {{ $item->wasteType?->name ?? 'Sampah' }}
+                                            </span>
+                                        @endforeach
+                                    </div>
                                 </td>
                                 <td class="p-6 text-right font-black text-slate-600 text-xs">
-                                    {{ number_format($sale->weight_kg, 2, ',', '.') }} <span class="text-[9px] opacity-60">kg</span>
+                                    {{ number_format($sale->total_weight_kg, 2, ',', '.') }} <span class="text-[9px] opacity-60">kg</span>
                                 </td>
                                 <td class="p-6 text-right">
-                                    <div class="text-xs font-black text-orange-600">Rp {{ number_format($sale->total_price, 0, ',', '.') }}</div>
+                                    <div class="text-xs font-black text-orange-600">Rp {{ number_format($sale->total_amount, 0, ',', '.') }}</div>
                                 </td>
                                 <td class="p-6">
                                     <div class="flex justify-center items-center gap-2">

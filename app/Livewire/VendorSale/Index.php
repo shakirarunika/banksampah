@@ -25,12 +25,13 @@ class Index extends Component
 
     public function render()
     {
-        $sales = VendorSale::with('wasteType')
+        $sales = VendorSale::with(['items.wasteType'])
             ->where('vendor_name', 'like', '%' . $this->search . '%')
-            ->orWhereHas('wasteType', function ($query) {
+            ->orWhereHas('items.wasteType', function ($query) {
                 $query->where('name', 'like', '%' . $this->search . '%');
             })
             ->latest('transaction_date')
+            ->latest('id')
             ->paginate(10);
 
         return view('livewire.vendor-sale.index', compact('sales'))

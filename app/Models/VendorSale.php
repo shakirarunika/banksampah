@@ -11,21 +11,20 @@ class VendorSale extends Model
 
     protected $fillable = [
         'transaction_date',
-        'waste_type_id',
-        'weight_kg',
-        'total_price',
         'vendor_name',
+        'total_weight_kg',
+        'total_amount',
         'receipt_photo',
     ];
 
     protected $casts = [
         'transaction_date' => 'date',
-        'weight_kg' => 'decimal:2',
-        'total_price' => 'decimal:2',
+        'total_weight_kg' => 'decimal:2',
+        'total_amount' => 'decimal:2',
     ];
 
-    public function wasteType()
+    public function items()
     {
-        return $this->belongsTo(WasteType::class);
+        return $this->hasMany(VendorSaleItem::class);
     }
 }

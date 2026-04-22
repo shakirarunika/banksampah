@@ -3,7 +3,7 @@
 namespace App\Livewire\VendorSale;
 
 use App\Models\TransactionItem;
-use App\Models\VendorSale;
+use App\Models\VendorSaleItem;
 use App\Models\WasteType;
 use Livewire\Component;
 
@@ -34,10 +34,12 @@ class Reconciliation extends Component
         $totalInboundPrice = $inboundItems->sum('subtotal');
 
         // 2. Ambil data agregat Outbound (Penjualan Vendor) bulan ini
-        $outboundSales = VendorSale::whereBetween('transaction_date', [$startDate->toDateString(), $endDate->toDateString()])->get();
+        $outboundItems = VendorSaleItem::whereHas('vendorSale', function ($q) use ($startDate, $endDate) {
+            $q->whereBetween('transaction_date', [$startDate->toDateString(), $endDate->toDateString()]);
+        })->get();
 
-        $totalOutboundKg = $outboundSales->sum('weight_kg');
-        $totalOutboundPrice = $outboundSales->sum('total_price');
+        $totalOutboundKg = $outboundItems->sum('weight_kg');
+        $totalOutboundPrice = $outboundItems->sum('total_price');
 
         // 3. Hitung Kalkulasi
         $shrinkageKg = $totalInboundKg - $totalOutboundKg;
@@ -47,12 +49,12 @@ class Reconciliation extends Component
 
         // 4. Data per Kategori
         $wasteTypes = WasteType::all();
-        $comparisonData = $wasteTypes->map(function ($type) use ($inboundItems, $outboundSales) {
+        $comparisonData = $wasteTypes->map(function ($type) use ($inboundItems, $outboundItems) {
             $inKg = $inboundItems->where('waste_type_id', $type->id)->sum('weight_kg');
             $inPrice = $inboundItems->where('waste_type_id', $type->id)->sum('subtotal');
 
-            $outKg = $outboundSales->where('waste_type_id', $type->id)->sum('weight_kg');
-            $outPrice = $outboundSales->where('waste_type_id', $type->id)->sum('total_price');
+            $outKg = $outboundItems->where('waste_type_id', $type->id)->sum('weight_kg');
+            $outPrice = $outboundItems->where('waste_type_id', $type->id)->sum('total_price');
 
             return [
                 'name' => $type->name,
