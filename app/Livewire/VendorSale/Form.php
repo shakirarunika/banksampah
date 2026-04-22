@@ -68,7 +68,7 @@ class Form extends Component
                     $this->items[$index]['price_per_kg'] = 0;
                 }
                 $this->calculateItemTotal($index);
-            } elseif ($field === 'weight_kg') {
+            } elseif ($field === 'weight_kg' || $field === 'price_per_kg') {
                 $this->calculateItemTotal($index);
             }
         }
@@ -112,14 +112,21 @@ class Form extends Component
             'items' => 'required|array|min:1',
             'items.*.waste_type_id' => 'required|exists:waste_types,id',
             'items.*.weight_kg' => 'required|numeric|min:0.01',
+            'items.*.price_per_kg' => 'required|numeric|min:0',
             'items.*.total_price' => 'required|numeric|min:0',
         ], [
             'items.*.waste_type_id.required' => 'Kategori sampah harus dipilih.',
             'items.*.weight_kg.required' => 'Berat tidak boleh kosong.',
+            'items.*.price_per_kg.required' => 'Harga / Kg tidak boleh kosong.',
             'items.*.total_price.required' => 'Total harga tidak boleh kosong.',
         ]);
 
         DB::transaction(function () {
+            // Kalkulasi ulang matematika secara ketat di backend
+            foreach ($this->items as &$item) {
+                $item['total_price'] = (float) $item['weight_kg'] * (float) ($item['price_per_kg'] ?? 0);
+            }
+
             $totalWeight = collect($this->items)->sum('weight_kg');
             $totalAmount = collect($this->items)->sum('total_price');
             

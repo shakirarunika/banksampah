@@ -104,8 +104,9 @@
                                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                                 <span class="text-slate-400 font-black text-xs">Rp</span>
                                             </div>
-                                            <input type="number" readonly wire:model="items.{{ $index }}.price_per_kg" class="w-full pl-8 border-2 border-slate-100 bg-slate-50 rounded-xl p-3 text-sm font-black text-right text-slate-500 focus:ring-0 transition cursor-not-allowed">
+                                            <input type="number" wire:model.live.debounce.500ms="items.{{ $index }}.price_per_kg" class="w-full pl-8 border-2 border-slate-200 rounded-xl p-3 text-sm font-black text-right text-slate-700 focus:border-blue-500 focus:ring-0 transition placeholder:text-slate-300">
                                         </div>
+                                        @error('items.'.$index.'.price_per_kg') <span class="text-red-500 text-[9px] font-bold block mt-1 uppercase tracking-widest">{{ $message }}</span> @enderror
                                     </div>
 
                                     <div class="md:col-span-2">
