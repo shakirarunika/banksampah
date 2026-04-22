@@ -129,18 +129,18 @@
                             <div class="flex flex-col md:flex-row gap-4 items-start md:items-end justify-between">
                                 <div class="w-full md:w-2/3">
                                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Keterangan Potongan (Opsional)</label>
-                                    <input type="text" wire:model="deduction_reason" class="w-full border-2 border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 focus:border-red-500 focus:ring-0 transition bg-white placeholder:text-slate-300" placeholder="Misal: Potongan kardus basah 5%">
+                                    <input type="text" wire:model="deduction_reason" class="w-full border-2 border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 focus:border-red-500 focus:ring-0 transition bg-white placeholder:text-slate-300" placeholder="Misal: Potongan kardus basah">
                                     @error('deduction_reason') <span class="text-red-500 text-[9px] font-bold block mt-1 uppercase tracking-widest">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="w-full md:w-1/3">
-                                    <label class="text-[10px] font-black text-red-400 uppercase tracking-widest mb-1 block">Nominal Potongan (Rp)</label>
+                                    <label class="text-[10px] font-black text-red-400 uppercase tracking-widest mb-1 block">Persentase Potongan</label>
                                     <div class="relative">
-                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <span class="text-slate-400 font-black text-xs">- Rp</span>
+                                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                            <span class="text-slate-400 font-black text-xs">%</span>
                                         </div>
-                                        <input type="number" wire:model.live.debounce.500ms="deduction_amount" class="w-full pl-12 border-2 border-slate-200 rounded-xl p-3 text-sm font-black text-right text-red-600 focus:border-red-500 focus:ring-0 transition placeholder:text-slate-300" placeholder="0">
+                                        <input type="number" step="0.01" wire:model.live.debounce.500ms="deduction_percentage" class="w-full pr-8 border-2 border-slate-200 rounded-xl p-3 text-sm font-black text-right text-red-600 focus:border-red-500 focus:ring-0 transition placeholder:text-slate-300" placeholder="0">
                                     </div>
-                                    @error('deduction_amount') <span class="text-red-500 text-[9px] font-bold block mt-1 uppercase tracking-widest">{{ $message }}</span> @enderror
+                                    @error('deduction_percentage') <span class="text-red-500 text-[9px] font-bold block mt-1 uppercase tracking-widest">{{ $message }}</span> @enderror
                                 </div>
                             </div>
                         </div>
@@ -153,16 +153,16 @@
                                     <div class="text-sm font-black text-slate-600">Rp {{ number_format(collect($items)->sum(fn($item) => (float)($item['total_price'] ?? 0)), 0, ',', '.') }}</div>
                                 </div>
                                 <div class="text-right flex justify-between md:block w-full md:w-auto border-b border-orange-200 md:border-0 pb-2 md:pb-0">
-                                    <div class="text-[9px] font-black text-red-400 uppercase">Potongan</div>
-                                    <div class="text-sm font-black text-red-500">- Rp {{ number_format((float)($deduction_amount ?: 0), 0, ',', '.') }}</div>
+                                    <div class="text-[9px] font-black text-red-400 uppercase">Potongan ({{ (float)($deduction_percentage ?: 0) }}%)</div>
+                                    @php
+                                        $grossTotal = collect($items)->sum(fn($item) => (float)($item['total_price'] ?? 0));
+                                        $deduction = $grossTotal * (((float)($deduction_percentage ?: 0)) / 100);
+                                        $netTotal = max(0, $grossTotal - $deduction);
+                                    @endphp
+                                    <div class="text-sm font-black text-red-500">- Rp {{ number_format($deduction, 0, ',', '.') }}</div>
                                 </div>
                                 <div class="text-right flex justify-between md:block w-full md:w-auto">
                                     <div class="text-[10px] font-black text-orange-500 uppercase">Total Bersih</div>
-                                    @php
-                                        $grossTotal = collect($items)->sum(fn($item) => (float)($item['total_price'] ?? 0));
-                                        $deduction = (float)($deduction_amount ?: 0);
-                                        $netTotal = max(0, $grossTotal - $deduction);
-                                    @endphp
                                     <div class="text-2xl font-black text-orange-600">Rp {{ number_format($netTotal, 0, ',', '.') }}</div>
                                 </div>
                             </div>
