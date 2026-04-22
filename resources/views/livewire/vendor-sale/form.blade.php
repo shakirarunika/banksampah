@@ -124,16 +124,46 @@
                             @enderror
                         </div>
                         
-                        <div class="bg-orange-50 p-4 border-t border-orange-100 flex justify-between items-center">
-                            <span class="text-[10px] font-black text-orange-600 uppercase tracking-widest">Total Keseluruhan</span>
-                            <div class="text-right flex items-center gap-6">
-                                <div>
-                                    <div class="text-[9px] font-black text-slate-400 uppercase">Total Berat</div>
-                                    <div class="text-sm font-black text-slate-600">{{ number_format(collect($items)->sum(fn($item) => (float)($item['weight_kg'] ?? 0)), 2, ',', '.') }} Kg</div>
+                        <!-- Deduction Inputs -->
+                        <div class="p-4 border-t border-slate-200 bg-slate-50/50">
+                            <div class="flex flex-col md:flex-row gap-4 items-start md:items-end justify-between">
+                                <div class="w-full md:w-2/3">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Keterangan Potongan (Opsional)</label>
+                                    <input type="text" wire:model="deduction_reason" class="w-full border-2 border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 focus:border-red-500 focus:ring-0 transition bg-white placeholder:text-slate-300" placeholder="Misal: Potongan kardus basah 5%">
+                                    @error('deduction_reason') <span class="text-red-500 text-[9px] font-bold block mt-1 uppercase tracking-widest">{{ $message }}</span> @enderror
                                 </div>
-                                <div>
-                                    <div class="text-[9px] font-black text-orange-400 uppercase">Total Pendapatan</div>
-                                    <div class="text-xl font-black text-orange-600">Rp {{ number_format(collect($items)->sum(fn($item) => (float)($item['total_price'] ?? 0)), 0, ',', '.') }}</div>
+                                <div class="w-full md:w-1/3">
+                                    <label class="text-[10px] font-black text-red-400 uppercase tracking-widest mb-1 block">Nominal Potongan (Rp)</label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <span class="text-slate-400 font-black text-xs">- Rp</span>
+                                        </div>
+                                        <input type="number" wire:model.live.debounce.500ms="deduction_amount" class="w-full pl-12 border-2 border-slate-200 rounded-xl p-3 text-sm font-black text-right text-red-600 focus:border-red-500 focus:ring-0 transition placeholder:text-slate-300" placeholder="0">
+                                    </div>
+                                    @error('deduction_amount') <span class="text-red-500 text-[9px] font-bold block mt-1 uppercase tracking-widest">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-orange-50 p-4 border-t border-orange-100 flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
+                            <span class="text-[10px] font-black text-orange-600 uppercase tracking-widest">Total Keseluruhan</span>
+                            <div class="flex flex-col md:flex-row items-end md:items-center gap-4 md:gap-8 w-full md:w-auto">
+                                <div class="text-right flex justify-between md:block w-full md:w-auto border-b border-orange-200 md:border-0 pb-2 md:pb-0">
+                                    <div class="text-[9px] font-black text-slate-400 uppercase">Total Kotor</div>
+                                    <div class="text-sm font-black text-slate-600">Rp {{ number_format(collect($items)->sum(fn($item) => (float)($item['total_price'] ?? 0)), 0, ',', '.') }}</div>
+                                </div>
+                                <div class="text-right flex justify-between md:block w-full md:w-auto border-b border-orange-200 md:border-0 pb-2 md:pb-0">
+                                    <div class="text-[9px] font-black text-red-400 uppercase">Potongan</div>
+                                    <div class="text-sm font-black text-red-500">- Rp {{ number_format((float)($deduction_amount ?: 0), 0, ',', '.') }}</div>
+                                </div>
+                                <div class="text-right flex justify-between md:block w-full md:w-auto">
+                                    <div class="text-[10px] font-black text-orange-500 uppercase">Total Bersih</div>
+                                    @php
+                                        $grossTotal = collect($items)->sum(fn($item) => (float)($item['total_price'] ?? 0));
+                                        $deduction = (float)($deduction_amount ?: 0);
+                                        $netTotal = max(0, $grossTotal - $deduction);
+                                    @endphp
+                                    <div class="text-2xl font-black text-orange-600">Rp {{ number_format($netTotal, 0, ',', '.') }}</div>
                                 </div>
                             </div>
                         </div>

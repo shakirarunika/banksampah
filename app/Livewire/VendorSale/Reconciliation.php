@@ -38,14 +38,18 @@ class Reconciliation extends Component
             $q->whereBetween('transaction_date', [$startDate->toDateString(), $endDate->toDateString()]);
         })->get();
 
+        $outboundSales = \App\Models\VendorSale::whereBetween('transaction_date', [$startDate->toDateString(), $endDate->toDateString()])->get();
+
         $totalOutboundKg = $outboundItems->sum('weight_kg');
-        $totalOutboundPrice = $outboundItems->sum('total_price');
+        $totalOutboundPrice = $outboundItems->sum('total_price'); // Gross total untuk tabel rincian
+        $totalDeductions = $outboundSales->sum('deduction_amount');
+        $netOutboundPrice = $outboundSales->sum('net_amount'); // Net total untuk hitung profit margin
 
         // 3. Hitung Kalkulasi
         $shrinkageKg = $totalInboundKg - $totalOutboundKg;
         $shrinkagePercent = $totalInboundKg > 0 ? ($shrinkageKg / $totalInboundKg) * 100 : 0;
         
-        $profitMargin = $totalOutboundPrice - $totalInboundPrice;
+        $profitMargin = $netOutboundPrice - $totalInboundPrice;
 
         // 4. Data per Kategori
         $wasteTypes = WasteType::all();
@@ -72,6 +76,7 @@ class Reconciliation extends Component
             'totalInboundPrice',
             'totalOutboundKg',
             'totalOutboundPrice',
+            'totalDeductions',
             'shrinkageKg',
             'shrinkagePercent',
             'profitMargin',

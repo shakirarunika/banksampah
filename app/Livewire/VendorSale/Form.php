@@ -19,6 +19,9 @@ class Form extends Component
     public $receipt_photo;
     public $existing_photo;
     
+    public $deduction_amount = 0;
+    public $deduction_reason = '';
+
     public $items = [];
 
     public function mount($id = null)
@@ -29,6 +32,8 @@ class Form extends Component
             $this->transaction_date = $sale->transaction_date->format('Y-m-d');
             $this->vendor_name = $sale->vendor_name;
             $this->existing_photo = $sale->receipt_photo;
+            $this->deduction_amount = (float) $sale->deduction_amount;
+            $this->deduction_reason = $sale->deduction_reason;
             
             foreach ($sale->items as $item) {
                 $this->items[] = [
@@ -68,6 +73,8 @@ class Form extends Component
             'transaction_date' => 'required|date',
             'vendor_name' => 'required|string|max:255',
             'receipt_photo' => 'nullable|image|max:2048', // max 2MB
+            'deduction_amount' => 'nullable|numeric|min:0',
+            'deduction_reason' => 'nullable|string|max:255',
             'items' => 'required|array|min:1',
             'items.*.waste_type_id' => 'required|exists:waste_types,id',
             'items.*.weight_kg' => 'required|numeric|min:0.01',
@@ -87,6 +94,8 @@ class Form extends Component
                 'vendor_name' => $this->vendor_name,
                 'total_weight_kg' => $totalWeight,
                 'total_amount' => $totalAmount,
+                'deduction_amount' => $this->deduction_amount ?: 0,
+                'deduction_reason' => $this->deduction_reason,
             ];
 
             if ($this->receipt_photo) {

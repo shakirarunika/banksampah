@@ -14,6 +14,8 @@ class VendorSale extends Model
         'vendor_name',
         'total_weight_kg',
         'total_amount',
+        'deduction_amount',
+        'deduction_reason',
         'receipt_photo',
     ];
 
@@ -21,10 +23,16 @@ class VendorSale extends Model
         'transaction_date' => 'date',
         'total_weight_kg' => 'decimal:2',
         'total_amount' => 'decimal:2',
+        'deduction_amount' => 'decimal:2',
     ];
 
     public function items()
     {
         return $this->hasMany(VendorSaleItem::class);
+    }
+
+    public function getNetAmountAttribute()
+    {
+        return $this->total_amount - $this->deduction_amount;
     }
 }

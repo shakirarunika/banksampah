@@ -71,7 +71,13 @@
                                     {{ number_format($sale->total_weight_kg, 2, ',', '.') }} <span class="text-[9px] opacity-60">kg</span>
                                 </td>
                                 <td class="p-6 text-right">
-                                    <div class="text-xs font-black text-orange-600">Rp {{ number_format($sale->total_amount, 0, ',', '.') }}</div>
+                                    <div class="flex flex-col items-end">
+                                        <div class="text-[10px] font-black text-slate-400 line-through">Rp {{ number_format($sale->total_amount, 0, ',', '.') }}</div>
+                                        @if($sale->deduction_amount > 0)
+                                            <div class="text-[9px] font-black text-red-500 mb-0.5" title="{{ $sale->deduction_reason }}">- Rp {{ number_format($sale->deduction_amount, 0, ',', '.') }}</div>
+                                        @endif
+                                        <div class="text-xs font-black text-orange-600">Rp {{ number_format($sale->net_amount, 0, ',', '.') }}</div>
+                                    </div>
                                 </td>
                                 <td class="p-6">
                                     <div class="flex justify-center items-center gap-2">

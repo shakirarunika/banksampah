@@ -37,8 +37,8 @@
             </div>
         </div>
 
-        <!-- Header Widgets (4 kotak ala Filament) -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <!-- Header Widgets -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-6 mb-6">
             <div class="bg-white rounded-3xl shadow-sm p-6 border-2 border-slate-50 border-t-emerald-400">
                 <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Masuk (Inbound)</h3>
                 <p class="mt-3 text-3xl font-black text-slate-800 tracking-tighter">{{ number_format($totalInboundKg, 2, ',', '.') }} <span class="text-sm font-bold text-slate-400">kg</span></p>
@@ -50,11 +50,16 @@
             </div>
 
             <div class="bg-white rounded-3xl shadow-sm p-6 border-2 border-slate-50 {{ $shrinkageKg > 0 ? 'border-t-red-400' : 'border-t-emerald-400' }}">
-                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Penyusutan (Shrinkage)</h3>
+                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Penyusutan</h3>
                 <p class="mt-3 text-3xl font-black tracking-tighter {{ $shrinkageKg > 0 ? 'text-red-500' : 'text-emerald-500' }}">
                     {{ number_format($shrinkageKg, 2, ',', '.') }} <span class="text-sm font-bold {{ $shrinkageKg > 0 ? 'text-red-300' : 'text-emerald-300' }}">kg</span>
                 </p>
                 <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">{{ number_format($shrinkagePercent, 1, ',', '.') }}% dari Inbound</p>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-sm p-6 border-2 border-slate-50 border-t-red-400">
+                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Potongan Vendor</h3>
+                <p class="mt-3 text-3xl font-black text-red-500 tracking-tighter"><span class="text-sm font-bold text-red-300">- Rp</span> {{ number_format($totalDeductions, 0, ',', '.') }}</p>
             </div>
 
             <div class="bg-white rounded-3xl shadow-sm p-6 border-2 border-slate-50 {{ $profitMargin > 0 ? 'border-t-blue-500' : 'border-t-red-400' }}">
@@ -110,14 +115,24 @@
                     </tbody>
                     <tfoot class="bg-slate-50 font-black text-xs uppercase tracking-widest border-t border-slate-200">
                         <tr>
-                            <td class="px-6 py-5 border-r border-slate-200 text-center text-slate-500">TOTAL</td>
+                            <td class="px-6 py-5 border-r border-slate-200 text-center text-slate-500">TOTAL {{ $totalDeductions > 0 ? 'KOTOR' : '' }}</td>
                             <td class="px-4 py-5 border-r border-slate-200 text-right text-emerald-700">{{ number_format($totalInboundKg, 2, ',', '.') }} <span class="text-[9px] opacity-50">kg</span></td>
                             <td class="px-4 py-5 border-r border-slate-200 text-right text-emerald-700">{{ number_format($totalInboundPrice, 0, ',', '.') }}</td>
                             <td class="px-4 py-5 border-r border-slate-200 text-right text-orange-700">{{ number_format($totalOutboundKg, 2, ',', '.') }} <span class="text-[9px] opacity-50">kg</span></td>
                             <td class="px-4 py-5 border-r border-slate-200 text-right text-orange-700">{{ number_format($totalOutboundPrice, 0, ',', '.') }}</td>
                             <td class="px-4 py-5 border-r border-slate-200 text-right {{ $shrinkageKg > 0 ? 'text-red-600' : 'text-slate-700' }}">{{ number_format($shrinkageKg, 2, ',', '.') }} <span class="text-[9px] opacity-50">kg</span></td>
-                            <td class="px-4 py-5 text-right {{ $profitMargin > 0 ? 'text-blue-700' : 'text-red-600' }}">{{ number_format($profitMargin, 0, ',', '.') }}</td>
+                            <td class="px-4 py-5 text-right {{ ($totalOutboundPrice - $totalInboundPrice) > 0 ? 'text-blue-700' : 'text-red-600' }}">{{ number_format($totalOutboundPrice - $totalInboundPrice, 0, ',', '.') }}</td>
                         </tr>
+                        @if($totalDeductions > 0)
+                        <tr>
+                            <td colspan="6" class="px-6 py-3 border-r border-t border-slate-200 text-right text-red-500">POTONGAN VENDOR</td>
+                            <td class="px-4 py-3 border-t border-slate-200 text-right text-red-500">- {{ number_format($totalDeductions, 0, ',', '.') }}</td>
+                        </tr>
+                        <tr class="bg-blue-50/50">
+                            <td colspan="6" class="px-6 py-4 border-r border-t border-slate-200 text-right text-blue-600">TOTAL MARGIN BERSIH</td>
+                            <td class="px-4 py-4 border-t border-slate-200 text-right font-black text-blue-700 text-sm">{{ number_format($profitMargin, 0, ',', '.') }}</td>
+                        </tr>
+                        @endif
                     </tfoot>
                 </table>
             </div>
