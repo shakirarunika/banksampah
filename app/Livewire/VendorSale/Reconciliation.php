@@ -20,10 +20,12 @@ class Reconciliation extends Component
 
     public function render()
     {
+        $startDate = \Carbon\Carbon::create($this->year, $this->month, 1)->startOfDay();
+        $endDate = $startDate->copy()->endOfMonth()->endOfDay();
+
         // 1. Ambil data agregat Inbound (Setoran Karyawan) bulan ini
-        $inboundItems = TransactionItem::whereHas('transaction', function ($q) {
-            $q->whereMonth('weighing_at', $this->month)
-              ->whereYear('weighing_at', $this->year)
+        $inboundItems = TransactionItem::whereHas('transaction', function ($q) use ($startDate, $endDate) {
+            $q->whereBetween('weighing_at', [$startDate, $endDate])
               // Hanya hitung yang sudah POSTED / bukan CANCELLED
               ->where('status', '!=', \App\Enums\TransactionStatus::CANCELLED->value);
         })->get();
@@ -32,9 +34,7 @@ class Reconciliation extends Component
         $totalInboundPrice = $inboundItems->sum('subtotal');
 
         // 2. Ambil data agregat Outbound (Penjualan Vendor) bulan ini
-        $outboundSales = VendorSale::whereMonth('transaction_date', $this->month)
-                                   ->whereYear('transaction_date', $this->year)
-                                   ->get();
+        $outboundSales = VendorSale::whereBetween('transaction_date', [$startDate->toDateString(), $endDate->toDateString()])->get();
 
         $totalOutboundKg = $outboundSales->sum('weight_kg');
         $totalOutboundPrice = $outboundSales->sum('total_price');
