@@ -129,11 +129,11 @@
                             <div class="text-right flex items-center gap-6">
                                 <div>
                                     <div class="text-[9px] font-black text-slate-400 uppercase">Total Berat</div>
-                                    <div class="text-sm font-black text-slate-600">{{ number_format(collect($items)->sum('weight_kg'), 2, ',', '.') }} Kg</div>
+                                    <div class="text-sm font-black text-slate-600">{{ number_format(collect($items)->sum(fn($item) => (float)($item['weight_kg'] ?? 0)), 2, ',', '.') }} Kg</div>
                                 </div>
                                 <div>
                                     <div class="text-[9px] font-black text-orange-400 uppercase">Total Pendapatan</div>
-                                    <div class="text-xl font-black text-orange-600">Rp {{ number_format((float) collect($items)->sum('total_price'), 0, ',', '.') }}</div>
+                                    <div class="text-xl font-black text-orange-600">Rp {{ number_format(collect($items)->sum(fn($item) => (float)($item['total_price'] ?? 0)), 0, ',', '.') }}</div>
                                 </div>
                             </div>
                         </div>
