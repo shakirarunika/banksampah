@@ -38,26 +38,40 @@ new class extends Component {
                                 <span class="font-black text-[10px] uppercase tracking-widest">{{ __('Data Transaksi') }}</span>
                             </x-nav-link>
 
-                            <x-nav-link :href="route('withdrawals.index')" :active="request()->routeIs('withdrawals.*')" wire:navigate>
-                                <span class="flex items-center gap-1.5 text-red-600">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <span
-                                        class="font-black text-[10px] uppercase tracking-widest">{{ __('Pencairan Saldo') }}</span>
-                                </span>
-                            </x-nav-link>
+                            <div class="hidden sm:flex sm:items-center sm:ms-2">
+                                <x-dropdown align="right" width="48">
+                                    <x-slot name="trigger">
+                                        <button
+                                            class="inline-flex items-center px-3 py-2 border border-transparent text-[10px] leading-4 font-black uppercase tracking-widest rounded-md text-emerald-600 bg-white hover:text-emerald-700 focus:outline-none transition ease-in-out duration-150">
+                                            <div>Keuangan</div>
+                                            <div class="ms-1">
+                                                <svg class="fill-current h-4 w-4" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd"
+                                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                                        clip-rule="evenodd" />
+                                                </svg>
+                                            </div>
+                                        </button>
+                                    </x-slot>
+                                    <x-slot name="content">
+                                        <x-dropdown-link :href="route('withdrawals.index')" wire:navigate class="text-red-600 font-bold">
+                                            {{ __('Pencairan Saldo') }}
+                                        </x-dropdown-link>
+
+                                        @can('access-admin')
+                                            <x-dropdown-link :href="route('vendor-sales.index')" wire:navigate class="text-orange-600 font-bold">
+                                                {{ __('Penjualan Vendor') }}
+                                            </x-dropdown-link>
+                                            <x-dropdown-link :href="route('reconciliation.index')" wire:navigate class="text-blue-600 font-bold">
+                                                {{ __('Rekonsiliasi Bulanan') }}
+                                            </x-dropdown-link>
+                                        @endcan
+                                    </x-slot>
+                                </x-dropdown>
+                            </div>
                         @endcan
 
                         @can('access-admin')
-                            <x-nav-link :href="route('vendor-sales.index')" :active="request()->routeIs('vendor-sales.*')" wire:navigate>
-                                <span class="font-black text-[10px] uppercase tracking-widest text-orange-600">{{ __('Penjualan Vendor') }}</span>
-                            </x-nav-link>
-
-                            <x-nav-link :href="route('reconciliation.index')" :active="request()->routeIs('reconciliation.*')" wire:navigate>
-                                <span class="font-black text-[10px] uppercase tracking-widest text-blue-600">{{ __('Rekonsiliasi') }}</span>
-                            </x-nav-link>
 
                             <div class="hidden sm:flex sm:items-center sm:ms-2">
                                 <x-dropdown align="right" width="48">
