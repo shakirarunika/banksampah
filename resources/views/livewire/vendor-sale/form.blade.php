@@ -74,7 +74,7 @@
 
                         <div class="p-4 space-y-4">
                             @foreach ($items as $index => $item)
-                                <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center bg-white p-4 rounded-xl border border-slate-100 shadow-sm transition-all hover:shadow-md">
+                                <div wire:key="item-{{ $index }}" class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center bg-white p-4 rounded-xl border border-slate-100 shadow-sm transition-all hover:shadow-md">
                                         
                                     <div class="md:col-span-4">
                                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block md:hidden">Kategori Sampah</label>
