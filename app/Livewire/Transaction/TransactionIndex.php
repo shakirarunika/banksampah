@@ -7,6 +7,7 @@ use App\Models\Transaction;
 use App\Models\TransactionItem;
 use App\Models\Withdrawal;
 use App\Services\TransactionService;
+use App\Helpers\ActivityLogger;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -75,6 +76,14 @@ class TransactionIndex extends Component
 
         try {
             $this->transactionService->voidTransaction($transaction);
+
+            ActivityLogger::log(
+                'void_transaction',
+                "Membatalkan transaksi #{$transaction->id} milik {$transaction->employee?->name} senilai Rp ".number_format($transaction->items->sum('subtotal'), 0, ',', '.'),
+                'Transaction',
+                $transaction->id
+            );
+
             session()->flash('message', 'Transaksi berhasil dibatalkan secara aman.');
         } catch (\Exception $e) {
             session()->flash('error', $e->getMessage());
@@ -112,6 +121,9 @@ class TransactionIndex extends Component
             \App\Models\Transaction::query()->delete();
 
             DB::commit();
+
+            ActivityLogger::log('reset_all_transactions', 'Mereset SELURUH data transaksi dari sistem.');
+
             session()->flash('message', 'Selesai! Semua data transaksi berhasil dihapus/direset.');
         } catch (\Exception $e) {
             DB::rollBack();

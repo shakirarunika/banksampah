@@ -89,12 +89,10 @@ new class extends Component {
                                         </button>
                                     </x-slot>
                                     <x-slot name="content">
-                                        <x-dropdown-link :href="route('master.waste')"
-                                            wire:navigate>{{ __('Jenis Sampah') }}</x-dropdown-link>
-                                        <x-dropdown-link :href="route('master.division')"
-                                            wire:navigate>{{ __('Data Divisi') }}</x-dropdown-link>
-                                        <x-dropdown-link :href="route('master.users')"
-                                            wire:navigate>{{ __('Data Karyawan') }}</x-dropdown-link>
+                                        <x-dropdown-link :href="route('master.waste')" wire:navigate>{{ __('Jenis Sampah') }}</x-dropdown-link>
+                                        <x-dropdown-link :href="route('master.division')" wire:navigate>{{ __('Data Divisi') }}</x-dropdown-link>
+                                        <x-dropdown-link :href="route('master.users')" wire:navigate>{{ __('Data Karyawan') }}</x-dropdown-link>
+                                        <x-dropdown-link :href="route('master.activity-log')" wire:navigate class="text-violet-600 font-bold">{{ __('Log Aktivitas') }}</x-dropdown-link>
                                     </x-slot>
                                 </x-dropdown>
                             </div>
@@ -173,6 +171,9 @@ new class extends Component {
                     </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('reconciliation.index')" :active="request()->routeIs('reconciliation.*')" wire:navigate class="text-blue-600 font-bold">
                         {{ __('Rekonsiliasi Bulanan') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('master.activity-log')" :active="request()->routeIs('master.activity-log')" wire:navigate class="text-violet-600 font-bold">
+                        {{ __('Log Aktivitas') }}
                     </x-responsive-nav-link>
                 @endcan
             </div>

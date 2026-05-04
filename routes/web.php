@@ -4,6 +4,7 @@ use App\Livewire\Dashboard\EmployeeDashboard;
 use App\Livewire\Master\DivisionManagement;
 use App\Livewire\Master\UserManagement;
 use App\Livewire\Master\WasteManagement;
+use App\Livewire\Master\ActivityLogIndex;
 use App\Livewire\Transaction\TransactionCreate;
 use App\Livewire\Transaction\TransactionIndex;
 use App\Livewire\Transaction\WithdrawalCreate;
@@ -52,6 +53,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/master/sampah', WasteManagement::class)->name('master.waste');
         Route::get('/master/karyawan', UserManagement::class)->name('master.users');
         Route::get('/master/divisi', DivisionManagement::class)->name('master.division');
+        Route::get('/master/log-aktivitas', ActivityLogIndex::class)->name('master.activity-log');
 
         // Vendor Sales & Reconciliation
         Route::get('/vendor-sales', \App\Livewire\VendorSale\Index::class)->name('vendor-sales.index');

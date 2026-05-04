@@ -4,6 +4,7 @@ namespace App\Livewire\Master;
 
 use App\Exports\WasteTypeExport;
 use App\Imports\WasteTypeImport;
+use App\Helpers\ActivityLogger;
 use App\Models\WastePrice;
 use App\Models\WasteType;
 use Illuminate\Support\Facades\DB;
@@ -87,6 +88,8 @@ class WasteManagement extends Component
             if ($this->selected_waste_id == $id) {
                 $this->reset(['selected_waste_id', 'new_price', 'effective_date']);
             }
+
+            ActivityLogger::log('delete_waste', "Menghapus jenis sampah: {$waste->name} (Kode: {$waste->code})", 'WasteType', $id);
 
             session()->flash('message', 'Master sampah dan harganya resmi dibumihanguskan!');
         } catch (\Exception $e) {

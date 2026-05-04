@@ -5,6 +5,7 @@ namespace App\Livewire\Transaction;
 use App\Models\TransactionItem;
 use App\Models\User;
 use App\Models\Withdrawal;
+use App\Helpers\ActivityLogger;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -95,6 +96,13 @@ class WithdrawalCreate extends Component
 
             DB::commit();
 
+            ActivityLogger::log(
+                'new_withdrawal',
+                "Mengajukan pencairan Rp ".number_format($this->amount, 0, ',', '.').' untuk '.$this->employee->name." (NIK: {$this->employee->employee_code})",
+                'Withdrawal',
+                $withdrawal->id
+            );
+
             // Flash session buat tombol cetak di Blade
             session()->flash('success', 'Pencairan dana '.$this->employee->name.' berhasil diajukan!');
             session()->flash('print_id', $withdrawal->id);
@@ -125,6 +133,14 @@ class WithdrawalCreate extends Component
 
         if ($withdrawal && $withdrawal->status === 'PENDING') {
             $withdrawal->update(['status' => 'COMPLETED']);
+
+            ActivityLogger::log(
+                'complete_withdrawal',
+                "Menyelesaikan pencairan Rp ".number_format($withdrawal->amount, 0, ',', '.').' untuk '.$withdrawal->employee?->name,
+                'Withdrawal',
+                $withdrawal->id
+            );
+
             session()->flash('success', 'Status transfer sudah COMPLETED!');
         }
     }

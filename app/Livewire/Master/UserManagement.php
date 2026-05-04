@@ -6,6 +6,7 @@ use App\Exports\UsersExport;
 use App\Imports\UsersImport;
 use App\Models\Division;
 use App\Models\User;
+use App\Helpers\ActivityLogger;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
@@ -102,6 +103,9 @@ class UserManagement extends Component
 
         // Kalau aman dari semua gembok di atas, baru hapus
         $user->delete();
+
+        ActivityLogger::log('delete_user', "Menghapus akun karyawan: {$user->name} (NIK: {$user->employee_code})", 'User', $id);
+
         session()->flash('message', 'Karyawan berhasil dihapus secara permanen.');
     }
 
@@ -115,6 +119,8 @@ class UserManagement extends Component
 
         $user = User::findOrFail($id);
         $user->update(['password' => Hash::make($user->employee_code)]);
+
+        ActivityLogger::log('reset_password', "Reset password karyawan: {$user->name} (NIK: {$user->employee_code}) ke default NIK", 'User', $user->id);
 
         session()->flash('message', "Password {$user->name} berhasil direset. Login default: NIK {$user->employee_code}");
     }
@@ -156,17 +162,19 @@ class UserManagement extends Component
                 'is_active' => $this->is_active,
             ]);
             $msg = 'Data karyawan berhasil diperbarui!';
+            ActivityLogger::log('update_user', "Memperbarui data karyawan: {$user->name} (NIK: {$user->employee_code})", 'User', $user->id);
         } else {
-            User::create([
-                'name' => $this->name,
+            $newUser = User::create([
+                'name'          => $this->name,
                 'employee_code' => $this->employee_code,
-                'email' => $this->email ?? $this->employee_code.'@bank.sampah',
-                'password' => Hash::make($this->employee_code),
-                'division_id' => $this->division_id,
-                'role' => $this->role,
-                'is_active' => $this->is_active,
+                'email'         => $this->email ?? $this->employee_code.'@bank.sampah',
+                'password'      => Hash::make($this->employee_code),
+                'division_id'   => $this->division_id,
+                'role'          => $this->role,
+                'is_active'     => $this->is_active,
             ]);
             $msg = 'Karyawan baru berhasil didaftarkan!';
+            ActivityLogger::log('create_user', "Mendaftarkan karyawan baru: {$newUser->name} (NIK: {$newUser->employee_code})", 'User', $newUser->id);
         }
 
         $this->cancelEdit();
