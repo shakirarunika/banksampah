@@ -2,9 +2,18 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
 
         @if (session()->has('message'))
-            <div
-                class="p-4 bg-emerald-100 text-emerald-700 rounded-2xl shadow-sm border-l-4 border-emerald-500 font-bold text-sm">
+            <div x-data="{ show: true }" x-show="show" x-transition
+                class="p-4 bg-emerald-100 text-emerald-700 rounded-2xl shadow-sm border-l-4 border-emerald-500 font-bold text-sm flex justify-between items-center">
                 <span class="uppercase tracking-widest text-[10px]">{{ session('message') }}</span>
+                <button @click="show = false" class="font-black hover:text-emerald-900 transition text-lg">×</button>
+            </div>
+        @endif
+
+        @if (session()->has('error'))
+            <div x-data="{ show: true }" x-show="show" x-transition
+                class="p-4 bg-red-100 text-red-700 rounded-2xl shadow-sm border-l-4 border-red-500 font-bold text-sm flex justify-between items-center">
+                <span class="uppercase tracking-widest text-[10px]">{{ session('error') }}</span>
+                <button @click="show = false" class="font-black hover:text-red-900 transition text-lg">×</button>
             </div>
         @endif
 
@@ -235,10 +244,24 @@
                                                     class="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl font-black text-[10px] uppercase hover:bg-emerald-600 hover:text-white transition shadow-sm border border-emerald-100">
                                                     Profil
                                                 </button>
+
+                                                {{-- Tombol Reset Password --}}
                                                 <button
-                                                    onclick="confirm('Hapus akses karyawan ini? Seluruh saldo akan hilang!') || event.stopImmediatePropagation()"
+                                                    wire:click="resetPassword({{ $u->id }})"
+                                                    wire:confirm="Reset password {{ $u->name }} ke NIK-nya ({{ $u->employee_code }})?  Karyawan harus diberitahu secara manual."
+                                                    class="p-2 text-slate-300 hover:text-amber-500 hover:bg-amber-50 rounded-xl transition-colors"
+                                                    title="Reset Password ke NIK">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                                    </svg>
+                                                </button>
+
+                                                {{-- Tombol Hapus --}}
+                                                <button
                                                     wire:click="delete({{ $u->id }})"
-                                                    class="p-2 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors">
+                                                    wire:confirm="Hapus akses karyawan ini? Tindakan ini permanen!"
+                                                    class="p-2 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                                                    title="Hapus Karyawan">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
                                                         <path

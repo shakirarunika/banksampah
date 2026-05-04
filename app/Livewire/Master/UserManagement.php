@@ -105,6 +105,20 @@ class UserManagement extends Component
         session()->flash('message', 'Karyawan berhasil dihapus secara permanen.');
     }
 
+    public function resetPassword($id)
+    {
+        // Proteksi: Admin tidak boleh reset password dirinya sendiri lewat halaman ini
+        if ($id == auth()->id()) {
+            session()->flash('error', 'Gunakan halaman Profil untuk mengubah password Anda sendiri.');
+            return;
+        }
+
+        $user = User::findOrFail($id);
+        $user->update(['password' => Hash::make($user->employee_code)]);
+
+        session()->flash('message', "Password {$user->name} berhasil direset. Login default: NIK {$user->employee_code}");
+    }
+
     public function edit($id)
     {
         $user = User::findOrFail($id);
