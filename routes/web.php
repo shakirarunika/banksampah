@@ -41,7 +41,7 @@ Route::middleware(['auth'])->group(function () {
             $withdrawal = Withdrawal::with(['employee.division', 'officer'])->findOrFail($id);
 
             return view('print.withdrawal', compact('withdrawal'));
-        })->name('withdrawals.print');
+        })->name('withdrawals.print')->middleware('can:access-petugas');
         Route::get('/transaksi/{transaction}/edit', \App\Livewire\Transaction\TransactionEdit::class)->name('transactions.edit');
 
         Route::get('/pencairan', WithdrawalCreate::class)->name('withdrawals.index');

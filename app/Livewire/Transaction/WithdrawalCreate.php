@@ -57,16 +57,34 @@ class WithdrawalCreate extends Component
                 'required',
                 'numeric',
                 'min:100000',
-                'max:'.$this->current_balance,
             ],
         ], [
             'employee.required' => 'NIK tidak ditemukan. Silakan cari nasabah terlebih dahulu.',
             'amount.min' => 'Aturan Pabrik: Minimal pencairan Rp 100.000!',
-            'amount.max' => 'Saldo tidak mencukupi! Maksimal pencairan sebesar Rp '.number_format($this->current_balance, 0, ',', '.'),
         ]);
 
         DB::beginTransaction();
         try {
+            // Hitung ulang saldo secara ATOMIK di dalam transaksi DB
+            // Ini mencegah race condition jika 2 petugas submit bersamaan
+            $total_masuk = TransactionItem::whereHas('transaction', function ($q) {
+                $q->where('employee_id', $this->employee->id)
+                  ->where('status', \App\Enums\TransactionStatus::POSTED->value);
+            })->sum('subtotal');
+
+            $total_keluar = Withdrawal::where('employee_id', $this->employee->id)
+                ->whereIn('status', ['PENDING', 'COMPLETED'])
+                ->sum('amount');
+
+            $saldo_aktual = $total_masuk - $total_keluar;
+
+            // Validasi saldo secara atomik
+            if ($this->amount > $saldo_aktual) {
+                DB::rollBack();
+                session()->flash('error', 'Saldo tidak mencukupi! Saldo aktual: Rp '.number_format($saldo_aktual, 0, ',', '.'));
+                return;
+            }
+
             $withdrawal = Withdrawal::create([
                 'employee_id' => $this->employee->id,
                 'officer_id' => auth()->id(),

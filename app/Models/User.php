@@ -55,6 +55,15 @@ class User extends Authenticatable
     }
 
     /**
+     * Relasi ke Withdrawal.
+     * Satu user bisa memiliki banyak riwayat pencairan.
+     */
+    public function withdrawals(): HasMany
+    {
+        return $this->hasMany(Withdrawal::class, 'employee_id');
+    }
+
+    /**
      * Relasi ke Divisi.
      * Mengambil data divisi dari user ini.
      */
@@ -69,15 +78,21 @@ class User extends Authenticatable
 
     /**
      * Accessor Saldo: $user->balance
-     * Menghitung total saldo dari transaksi yang sudah di-post.
+     * Menghitung total saldo bersih = pemasukan POSTED - semua pencairan (PENDING & COMPLETED).
      */
     public function getBalanceAttribute()
     {
-        return $this->transactions()
+        $masuk = $this->transactions()
             ->where('status', \App\Enums\TransactionStatus::POSTED->value)
             ->with('items')
             ->get()
             ->sum(fn ($transaction) => $transaction->items->sum('subtotal'));
+
+        $keluar = $this->withdrawals()
+            ->whereIn('status', ['PENDING', 'COMPLETED'])
+            ->sum('amount');
+
+        return $masuk - $keluar;
     }
 
     /* -------------------------------------------------------------------------- */

@@ -26,9 +26,11 @@ class Index extends Component
     public function render()
     {
         $sales = VendorSale::with(['items.wasteType'])
-            ->where('vendor_name', 'like', '%' . $this->search . '%')
-            ->orWhereHas('items.wasteType', function ($query) {
-                $query->where('name', 'like', '%' . $this->search . '%');
+            ->where(function ($query) {
+                $query->where('vendor_name', 'like', '%' . $this->search . '%')
+                    ->orWhereHas('items.wasteType', function ($q) {
+                        $q->where('name', 'like', '%' . $this->search . '%');
+                    });
             })
             ->latest('transaction_date')
             ->latest('id')

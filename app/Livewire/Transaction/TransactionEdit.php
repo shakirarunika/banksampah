@@ -40,6 +40,12 @@ class TransactionEdit extends Component
 
     public function update()
     {
+        // Guard: transaksi yang sudah di-void tidak boleh diedit
+        if ($this->transaction->status === \App\Enums\TransactionStatus::CANCELLED) {
+            session()->flash('error', 'Transaksi ini sudah dibatalkan (void) dan tidak dapat diedit.');
+            return redirect()->route('transactions.index');
+        }
+
         $this->validate([
             'items.*.waste_type_id' => 'required|exists:waste_types,id',
             'items.*.weight_kg' => 'required|numeric|min:0.01',

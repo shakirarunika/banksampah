@@ -7,7 +7,6 @@ use App\Imports\WasteTypeImport;
 use App\Models\WastePrice;
 use App\Models\WasteType;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
@@ -74,17 +73,15 @@ class WasteManagement extends Component
         }
 
         try {
-            // 🔴 MATIKAN PENGECEKAN SQLITE (MATIKAN CCTV)
-            Schema::disableForeignKeyConstraints();
+            // Hapus dalam urutan yang benar (child dulu, baru parent) di dalam DB transaction
+            // Ini aman karena tidak perlu menonaktifkan FK constraint
+            DB::transaction(function () use ($id) {
+                // 1. Hapus histori harga dulu (child table)
+                WastePrice::where('waste_type_id', $id)->delete();
 
-            // 1. Eksekusi mati histori harganya
-            DB::table('waste_prices')->where('waste_type_id', $id)->delete();
-
-            // 2. Eksekusi mati nama sampahnya
-            DB::table('waste_types')->where('id', $id)->delete();
-
-            // 🟢 NYALAKAN LAGI PENGECEKAN SQLITE (WAJIB BIAR DATABASE GAK CORRUPT)
-            Schema::enableForeignKeyConstraints();
+                // 2. Hapus master sampahnya (parent table)
+                WasteType::where('id', $id)->delete();
+            });
 
             // Reset form kalau yang dihapus lagi di-klik
             if ($this->selected_waste_id == $id) {
@@ -93,8 +90,6 @@ class WasteManagement extends Component
 
             session()->flash('message', 'Master sampah dan harganya resmi dibumihanguskan!');
         } catch (\Exception $e) {
-            // Kalau apes masih error, nyalain lagi satpamnya
-            Schema::enableForeignKeyConstraints();
             session()->flash('error', 'Sistem Gagal Hapus: '.$e->getMessage());
         }
     }

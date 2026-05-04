@@ -126,7 +126,7 @@ class UserManagement extends Component
             'name' => 'required|string|max:255',
             'email' => ['nullable', 'email', Rule::unique('users')->ignore($this->userId)],
             'division_id' => 'required|exists:divisions,id',
-            'role' => 'required',
+            'role' => 'required|in:admin,petugas,karyawan',
         ];
 
         $this->validate($rules);

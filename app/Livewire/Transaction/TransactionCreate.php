@@ -21,6 +21,13 @@ class TransactionCreate extends Component
 {
     use WithFileUploads;
 
+    protected TransactionService $transactionService;
+
+    public function boot(TransactionService $transactionService): void
+    {
+        $this->transactionService = $transactionService;
+    }
+
     public $file_import;
 
     public function downloadTemplate(): BinaryFileResponse
@@ -86,7 +93,7 @@ class TransactionCreate extends Component
         $this->form->removeItem($index);
     }
 
-    public function saveTransaction(TransactionService $transactionService)
+    public function saveTransaction()
     {
         if (! $this->employee) {
             session()->flash('error', 'Silakan pilih nasabah (karyawan) terlebih dahulu.');
@@ -107,7 +114,7 @@ class TransactionCreate extends Component
             // Gabungkan tanggal input dengan waktu saat ini agar urutan transaksi tetap rapi
             $weighingDateTime = Carbon::parse($this->form->transaction_date.' '.now()->format('H:i:s'));
 
-            $transactionService->createTransaction([
+            $this->transactionService->createTransaction([
                 'employee_id' => $this->employee->id,
                 'officer_id' => auth()->id(),
                 'weighing_at' => $weighingDateTime,
