@@ -21,6 +21,13 @@ class TransactionIndex extends Component
     // Impor trait yang dibutuhkan
     use WithFileUploads, WithPagination;
 
+    protected TransactionService $transactionService;
+
+    public function boot(TransactionService $transactionService): void
+    {
+        $this->transactionService = $transactionService;
+    }
+
     public $search = '';
 
     public $file_import;
@@ -57,7 +64,7 @@ class TransactionIndex extends Component
     }
 
     // Fungsi untuk membatalkan (void) transaksi
-    public function voidTransaction($id, TransactionService $transactionService)
+    public function voidTransaction($id)
     {
         $transaction = Transaction::with('items')->find($id);
 
@@ -67,7 +74,7 @@ class TransactionIndex extends Component
         }
 
         try {
-            $transactionService->voidTransaction($transaction);
+            $this->transactionService->voidTransaction($transaction);
             session()->flash('message', 'Transaksi berhasil dibatalkan secara aman.');
         } catch (\Exception $e) {
             session()->flash('error', $e->getMessage());
