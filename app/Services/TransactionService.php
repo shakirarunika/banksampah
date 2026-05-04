@@ -67,7 +67,7 @@ class TransactionService
 
         $total_masuk = TransactionItem::whereHas('transaction', function ($q) use ($transaction) {
             $q->where('employee_id', $transaction->employee_id)
-                ->where('status', TransactionStatus::POSTED);
+                ->where('status', TransactionStatus::POSTED->value);
         })->sum('subtotal');
 
         $total_keluar = Withdrawal::where('employee_id', $transaction->employee_id)

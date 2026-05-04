@@ -97,32 +97,40 @@
                                     <th class="p-4">Detail</th>
                                     <th class="p-4 text-right">Berat</th>
                                     <th class="p-4 text-right">Nilai</th>
+                                    <th class="p-4 text-center">Status</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-50 text-sm">
                                 @forelse($recentTransactions as $trx)
-                                    <tr class="hover:bg-emerald-50/30 transition">
+                                    @php $isCancelled = $trx->status === \App\Enums\TransactionStatus::CANCELLED; @endphp
+                                    <tr class="transition {{ $isCancelled ? 'bg-red-50/40 opacity-60' : 'hover:bg-emerald-50/30' }}">
                                         <td class="p-4 text-gray-500 font-mono text-xs">
                                             {{ \Carbon\Carbon::parse($trx->weighing_at)->format('d/m/Y H:i') }}
                                         </td>
                                         <td class="p-4">
                                             <div class="flex flex-wrap gap-1">
                                                 @foreach ($trx->items as $item)
-                                                    <span
-                                                        class="px-2 py-0.5 bg-gray-100 text-gray-600 font-bold uppercase tracking-widest rounded text-[9px] border border-gray-200">
+                                                    <span class="px-2 py-0.5 font-bold uppercase tracking-widest rounded text-[9px] border {{ $isCancelled ? 'bg-red-100 text-red-400 border-red-200 line-through' : 'bg-gray-100 text-gray-600 border-gray-200' }}">
                                                         {{ $item->wasteType?->name ?? 'Terhapus' }}
                                                     </span>
                                                 @endforeach
                                             </div>
                                         </td>
-                                        <td class="p-4 text-right font-medium text-gray-600">
+                                        <td class="p-4 text-right font-medium {{ $isCancelled ? 'text-red-400 line-through' : 'text-gray-600' }}">
                                             {{ number_format($trx->items->sum('weight_kg'), 2) }} kg</td>
-                                        <td class="p-4 text-right font-black text-emerald-600">Rp
+                                        <td class="p-4 text-right font-black {{ $isCancelled ? 'text-red-400 line-through' : 'text-emerald-600' }}">Rp
                                             {{ number_format($trx->items->sum('subtotal'), 0, ',', '.') }}</td>
+                                        <td class="p-4 text-center">
+                                            @if($isCancelled)
+                                                <span class="px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-widest bg-red-100 text-red-600 border border-red-200">Dibatalkan</span>
+                                            @else
+                                                <span class="px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-widest bg-emerald-100 text-emerald-700 border border-emerald-200">Berhasil</span>
+                                            @endif
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4"
+                                        <td colspan="5"
                                             class="p-10 text-center text-gray-400 italic font-medium text-xs">Belum ada
                                             transaksi.</td>
                                     </tr>
@@ -133,23 +141,25 @@
 
                     <div class="block md:hidden divide-y divide-gray-50">
                         @forelse($recentTransactions as $trx)
-                            <div class="p-4">
+                            @php $isCancelled = $trx->status === \App\Enums\TransactionStatus::CANCELLED; @endphp
+                            <div class="p-4 {{ $isCancelled ? 'bg-red-50/40 opacity-60' : '' }}">
                                 <div class="flex justify-between items-start mb-2">
-                                    <span
-                                        class="text-[10px] text-gray-500 font-mono">{{ \Carbon\Carbon::parse($trx->weighing_at)->format('d M, H:i') }}</span>
-                                    <span class="text-[11px] font-black text-emerald-600">Rp
-                                        {{ number_format($trx->items->sum('subtotal'), 0, ',', '.') }}</span>
+                                    <span class="text-[10px] text-gray-500 font-mono">{{ \Carbon\Carbon::parse($trx->weighing_at)->format('d M, H:i') }}</span>
+                                    <div class="flex items-center gap-2">
+                                        @if($isCancelled)
+                                            <span class="px-1.5 py-0.5 rounded-full text-[7px] font-black uppercase bg-red-100 text-red-600 border border-red-200">Batal</span>
+                                        @endif
+                                        <span class="text-[11px] font-black {{ $isCancelled ? 'text-red-400 line-through' : 'text-emerald-600' }}">Rp
+                                            {{ number_format($trx->items->sum('subtotal'), 0, ',', '.') }}</span>
+                                    </div>
                                 </div>
                                 <div class="flex justify-between items-end">
                                     <div class="flex flex-wrap gap-1">
                                         @foreach ($trx->items as $item)
-                                            <span
-                                                class="px-1.5 py-0.5 bg-gray-100 text-gray-500 font-bold rounded text-[8px] uppercase">{{ $item->wasteType?->name }}</span>
+                                            <span class="px-1.5 py-0.5 font-bold rounded text-[8px] uppercase {{ $isCancelled ? 'bg-red-100 text-red-400 line-through' : 'bg-gray-100 text-gray-500' }}">{{ $item->wasteType?->name }}</span>
                                         @endforeach
                                     </div>
-                                    <span
-                                        class="text-[10px] font-bold text-gray-400">{{ number_format($trx->items->sum('weight_kg'), 1) }}
-                                        kg</span>
+                                    <span class="text-[10px] font-bold {{ $isCancelled ? 'text-red-400 line-through' : 'text-gray-400' }}">{{ number_format($trx->items->sum('weight_kg'), 1) }} kg</span>
                                 </div>
                             </div>
                         @empty
