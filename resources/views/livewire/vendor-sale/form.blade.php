@@ -181,9 +181,9 @@
                     </div>
                 </div>
 
-                <button type="submit" wire:loading.attr="disabled" class="w-full py-5 bg-orange-600 text-white font-black rounded-2xl uppercase tracking-widest text-sm hover:bg-orange-700 transition shadow-xl shadow-orange-100 active:scale-95 disabled:bg-slate-300">
-                    <span wire:loading.remove>{{ $vendorSaleId ? 'Update Data Penjualan' : 'Konfirmasi Penjualan' }}</span>
-                    <span wire:loading>Memproses Data...</span>
+                <button type="submit" wire:loading.attr="disabled" wire:target="save" class="w-full py-5 bg-orange-600 text-white font-black rounded-2xl uppercase tracking-widest text-sm hover:bg-orange-700 transition shadow-xl shadow-orange-100 active:scale-95 disabled:bg-slate-300">
+                    <span wire:loading.remove wire:target="save">{{ $vendorSaleId ? 'Update Data Penjualan' : 'Konfirmasi Penjualan' }}</span>
+                    <span wire:loading wire:target="save">Memproses Data...</span>
                 </button>
 
             </form>

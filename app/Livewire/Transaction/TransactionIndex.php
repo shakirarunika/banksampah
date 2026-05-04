@@ -44,6 +44,7 @@ class TransactionIndex extends Component
             Excel::import(new WasteTransactionImport, $this->file_import->getRealPath());
 
             $this->reset('file_import');
+            $this->dispatch('file-imported');
             session()->flash('message', 'Sip! Data historis berhasil diimpor ke dalam sistem.');
         } catch (\Exception $e) {
             session()->flash('error', 'Mohon maaf, terjadi kesalahan pada file Excel: '.$e->getMessage());

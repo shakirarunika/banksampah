@@ -59,7 +59,8 @@
 
                 {{-- Form import dengan Alpine untuk feedback real-time nama file --}}
                 <form wire:submit="importExcel" class="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto"
-                    x-data="{ fileName: 'Pilih File Excel...' }">
+                    x-data="{ fileName: 'Pilih File Excel...' }"
+                    @file-imported.window="fileName = 'Pilih File Excel...'; document.getElementById('file_import').value = ''">
                     <div class="relative w-full sm:w-64">
                         <input type="file" wire:model="file_import" id="file_import" class="hidden"
                             @change="fileName = $event.target.files[0] ? $event.target.files[0].name : 'Pilih File Excel...'" />
@@ -80,7 +81,7 @@
 
                     <button type="submit" wire:loading.attr="disabled" wire:target="file_import,importExcel"
                         class="w-full sm:w-auto bg-emerald-800 text-white px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-emerald-200 disabled:opacity-50 transition-all active:scale-95">
-                        <span wire:loading.remove wire:target="importExcel">Proses Impor</span>
+                        <span wire:loading.remove wire:target="file_import,importExcel">Proses Impor</span>
                         <span wire:loading wire:target="file_import" class="flex items-center gap-2">
                             <svg class="animate-spin h-3 w-3" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>

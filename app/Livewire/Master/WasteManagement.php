@@ -57,6 +57,7 @@ class WasteManagement extends Component
         try {
             Excel::import(new WasteTypeImport, $this->file_excel->getRealPath());
             $this->file_excel = null;
+            $this->dispatch('file-imported');
             session()->flash('message', 'Master sampah dan harga berhasil diupdate!');
         } catch (\Exception $e) {
             session()->flash('error', 'Gagal mengimpor data! Silakan periksa kembali format file Anda.');

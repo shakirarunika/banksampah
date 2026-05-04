@@ -42,6 +42,7 @@ class DivisionManagement extends Component
         try {
             Excel::import(new DivisionsImport, $this->file_excel->getRealPath());
             $this->file_excel = null;
+            $this->dispatch('file-imported');
             session()->flash('message', 'Data divisi berhasil diimport!');
         } catch (\Exception $e) {
             // GANTI BARIS INI BIAR KELIHATAN ERROR ASLINYA

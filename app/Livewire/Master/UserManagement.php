@@ -71,6 +71,7 @@ class UserManagement extends Component
             Excel::import(new UsersImport, $this->file_excel->getRealPath());
 
             $this->file_excel = null; // Bersihkan input file setelah sukses
+            $this->dispatch('file-imported');
             session()->flash('message', 'Data berhasil diimport dari Excel!');
         } catch (\Exception $e) {
             // Kasih tau error spesifiknya kalau gagal
