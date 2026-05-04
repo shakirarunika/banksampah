@@ -28,7 +28,7 @@ class TransactionService
                 'employee_id' => $data['employee_id'],
                 'officer_id' => $data['officer_id'],
                 'weighing_at' => $data['weighing_at'],
-                'status' => TransactionStatus::POSTED->value,
+                'status' => TransactionStatus::POSTED,
             ]);
 
             foreach ($items as $item) {
@@ -59,7 +59,7 @@ class TransactionService
      */
     public function voidTransaction(Transaction $transaction): bool
     {
-        if ($transaction->status !== TransactionStatus::POSTED->value) {
+        if ($transaction->status !== TransactionStatus::POSTED) {
             throw new Exception('Transaksi tidak valid atau sudah dibatalkan.');
         }
 
@@ -67,7 +67,7 @@ class TransactionService
 
         $total_masuk = TransactionItem::whereHas('transaction', function ($q) use ($transaction) {
             $q->where('employee_id', $transaction->employee_id)
-                ->where('status', TransactionStatus::POSTED->value);
+                ->where('status', TransactionStatus::POSTED);
         })->sum('subtotal');
 
         $total_keluar = Withdrawal::where('employee_id', $transaction->employee_id)
@@ -80,6 +80,6 @@ class TransactionService
             throw new Exception('GAGAL VOID! Saldo akan minus jika dibatalkan!');
         }
 
-        return $transaction->update(['status' => TransactionStatus::CANCELLED->value]);
+        return $transaction->update(['status' => TransactionStatus::CANCELLED]);
     }
 }
