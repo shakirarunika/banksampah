@@ -23,8 +23,6 @@ class User extends Authenticatable
         'password',
         'employee_code', // Wajib untuk NIK
         'division_id',   // Wajib untuk relasi departemen
-        'role',          // Wajib untuk hak akses
-        'is_active',     // Status aktif karyawan
     ];
 
     protected $hidden = [

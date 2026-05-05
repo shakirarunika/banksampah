@@ -66,14 +66,17 @@ class WithdrawalCreate extends Component
 
         DB::beginTransaction();
         try {
+            // Lock data nasabah secara pesimis untuk mencegah Race Condition
+            $lockedEmployee = User::where('id', $this->employee->id)->lockForUpdate()->first();
+
             // Hitung ulang saldo secara ATOMIK di dalam transaksi DB
             // Ini mencegah race condition jika 2 petugas submit bersamaan
-            $total_masuk = TransactionItem::whereHas('transaction', function ($q) {
-                $q->where('employee_id', $this->employee->id)
+            $total_masuk = TransactionItem::whereHas('transaction', function ($q) use ($lockedEmployee) {
+                $q->where('employee_id', $lockedEmployee->id)
                   ->where('status', \App\Enums\TransactionStatus::POSTED->value);
             })->sum('subtotal');
 
-            $total_keluar = Withdrawal::where('employee_id', $this->employee->id)
+            $total_keluar = Withdrawal::where('employee_id', $lockedEmployee->id)
                 ->whereIn('status', ['PENDING', 'COMPLETED'])
                 ->sum('amount');
 

@@ -15,22 +15,26 @@ class UsersImport implements ToModel, WithHeadingRow
         // 1. Cari ID divisi berdasarkan nama yang diketik di Excel (Case Insensitive)
         $division = Division::where('name', 'like', '%'.$row['nama_divisi'].'%')->first();
 
-        // 2. Gunakan updateOrCreate
-        // Argumen 1: Kolom kunci untuk mencari data (NIK)
-        // Argumen 2: Data yang mau diupdate atau dibuat baru
-        return User::updateOrCreate(
-            ['employee_code' => $row['nik']], // Kunci Pencarian
-            [
-                'name' => $row['nama_lengkap'],
-                'email' => $row['email'] ?? $row['nik'].'@dasiaya.com',
+        // 2. Gunakan firstOrNew dan assign explicit
+        $user = User::firstOrNew(['employee_code' => $row['nik']]);
+        
+        $user->fill([
+            'name' => $row['nama_lengkap'],
+            'email' => $row['email'] ?? $row['nik'].'@dasiaya.com',
+            'division_id' => $division->id ?? null,
+        ]);
 
-                // TIPS: Hanya set password jika user-nya beneran baru (biar password lama gak keriset)
-                'password' => Hash::make($row['nik']),
+        // TIPS: Hanya set password jika user-nya beneran baru (biar password lama gak keriset)
+        if (!$user->exists) {
+            $user->password = Hash::make($row['nik']);
+        }
 
-                'role' => strtolower($row['role'] ?? 'karyawan'),
-                'division_id' => $division->id ?? null,
-                'is_active' => true,
-            ]
-        );
+        // Set kolom yang tidak ada di $fillable secara manual
+        $user->role = strtolower($row['role'] ?? 'karyawan');
+        $user->is_active = true;
+        
+        $user->save();
+
+        return $user;
     }
 }

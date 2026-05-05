@@ -154,26 +154,31 @@ class UserManagement extends Component
 
         if ($this->isEditMode) {
             $user = User::find($this->userId);
-            $user->update([
+            $user->fill([
                 'name' => $this->name,
                 'employee_code' => $this->employee_code,
                 'email' => $this->email,
                 'division_id' => $this->division_id,
-                'role' => $this->role,
-                'is_active' => $this->is_active,
             ]);
+            $user->role = $this->role;
+            $user->is_active = $this->is_active;
+            $user->save();
+            
             $msg = 'Data karyawan berhasil diperbarui!';
             ActivityLogger::log('update_user', "Memperbarui data karyawan: {$user->name} (NIK: {$user->employee_code})", 'User', $user->id);
         } else {
-            $newUser = User::create([
+            $newUser = new User;
+            $newUser->fill([
                 'name'          => $this->name,
                 'employee_code' => $this->employee_code,
                 'email'         => $this->email ?? $this->employee_code.'@bank.sampah',
                 'password'      => Hash::make($this->employee_code),
                 'division_id'   => $this->division_id,
-                'role'          => $this->role,
-                'is_active'     => $this->is_active,
             ]);
+            $newUser->role = $this->role;
+            $newUser->is_active = $this->is_active;
+            $newUser->save();
+            
             $msg = 'Karyawan baru berhasil didaftarkan!';
             ActivityLogger::log('create_user', "Mendaftarkan karyawan baru: {$newUser->name} (NIK: {$newUser->employee_code})", 'User', $newUser->id);
         }
