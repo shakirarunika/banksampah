@@ -49,9 +49,18 @@ class WithdrawalCreate extends Component
         }
     }
 
-    // 2. SIMPAN PENCAIRAN (KEJAM & AMAN)
     public function saveWithdrawal()
     {
+        $throttleKey = 'withdrawal-submit-'.auth()->id();
+        
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($throttleKey, 3)) {
+            $seconds = \Illuminate\Support\Facades\RateLimiter::availableIn($throttleKey);
+            session()->flash('error', "Sistem mendeteksi terlalu banyak klik. Silakan tunggu {$seconds} detik.");
+            return;
+        }
+        
+        \Illuminate\Support\Facades\RateLimiter::hit($throttleKey, 30); // 30 detik cooldown
+
         $this->validate([
             'employee' => 'required',
             'amount' => [

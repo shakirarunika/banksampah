@@ -95,6 +95,16 @@ class TransactionCreate extends Component
 
     public function saveTransaction()
     {
+        $throttleKey = 'transaction-submit-'.auth()->id();
+        
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($throttleKey, 3)) {
+            $seconds = \Illuminate\Support\Facades\RateLimiter::availableIn($throttleKey);
+            session()->flash('error', "Terlalu banyak permintaan. Silakan coba lagi dalam {$seconds} detik.");
+            return;
+        }
+        
+        \Illuminate\Support\Facades\RateLimiter::hit($throttleKey, 30);
+
         if (! $this->employee) {
             session()->flash('error', 'Silakan pilih nasabah (karyawan) terlebih dahulu.');
 
