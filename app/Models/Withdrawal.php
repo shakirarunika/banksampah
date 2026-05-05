@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Withdrawal extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     // INI DIA SABUK PENGAMANNYA! Wajib diisi semua nama kolomnya.
     protected $fillable = [
@@ -24,7 +25,7 @@ class Withdrawal extends Model
      */
     public function employee(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'employee_id');
+        return $this->belongsTo(User::class, 'employee_id')->withTrashed();
     }
 
     /**
@@ -32,6 +33,6 @@ class Withdrawal extends Model
      */
     public function officer(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'officer_id');
+        return $this->belongsTo(User::class, 'officer_id')->withTrashed();
     }
 }

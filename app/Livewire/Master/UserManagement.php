@@ -90,24 +90,12 @@ class UserManagement extends Component
             return;
         }
 
-        // PROTEKSI 2: Cek keterlibatan di tabel Transaksi (Sebagai Nasabah ATAU Petugas)
-        // Sesuaikan nama kolom ('employee_id' / 'user_id' dan 'officer_id') dengan yang ada di database
-        $isTiedToTransaction = \App\Models\Transaction::where('employee_id', $user->id)
-            ->orWhere('officer_id', $user->id)
-            ->exists();
-
-        if ($isTiedToTransaction) {
-            session()->flash('error', 'GAGAL: Karyawan ini tidak bisa dihapus karena datanya terikat di Riwayat Transaksi (sebagai nasabah atau petugas). Coba ubah statusnya jadi Non-Aktif saja.');
-
-            return;
-        }
-
-        // Kalau aman dari semua gembok di atas, baru hapus
+        // Kalau aman dari semua gembok di atas, baru hapus (Soft Delete)
         $user->delete();
 
-        ActivityLogger::log('delete_user', "Menghapus akun karyawan: {$user->name} (NIK: {$user->employee_code})", 'User', $id);
+        ActivityLogger::log('delete_user', "Menonaktifkan (Soft Delete) akun karyawan: {$user->name} (NIK: {$user->employee_code})", 'User', $id);
 
-        session()->flash('message', 'Karyawan berhasil dihapus secara permanen.');
+        session()->flash('message', 'Karyawan berhasil dihapus (disembunyikan dari sistem).');
     }
 
     public function resetPassword($id)

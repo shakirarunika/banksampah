@@ -31,6 +31,6 @@ class TransactionItem extends Model
      */
     public function wasteType(): BelongsTo
     {
-        return $this->belongsTo(WasteType::class);
+        return $this->belongsTo(WasteType::class)->withTrashed();
     }
 }

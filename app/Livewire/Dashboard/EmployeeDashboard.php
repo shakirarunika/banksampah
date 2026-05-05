@@ -67,6 +67,7 @@ class EmployeeDashboard extends Component
                     DB::raw('COALESCE((SELECT SUM(ti.weight_kg) FROM transaction_items ti JOIN transactions t ON t.id = ti.transaction_id WHERE t.employee_id = users.id AND t.status = "'.\App\Enums\TransactionStatus::POSTED->value.'"), 0) as total_kg')
                 )
                 ->leftJoin('divisions', 'users.division_id', '=', 'divisions.id')
+                ->whereNull('users.deleted_at')
                 ->whereExists(function ($query) {
                     $query->select(DB::raw(1))
                         ->from('transactions')
@@ -138,6 +139,7 @@ class EmployeeDashboard extends Component
             ->join('transactions', 'users.id', '=', 'transactions.employee_id')
             ->join('transaction_items', 'transactions.id', '=', 'transaction_items.transaction_id')
             ->leftJoin('divisions', 'users.division_id', '=', 'divisions.id')
+            ->whereNull('users.deleted_at')
             ->where('transactions.status', \App\Enums\TransactionStatus::POSTED->value)
             ->select(
                 'users.name',
@@ -161,6 +163,7 @@ class EmployeeDashboard extends Component
                 DB::raw('COALESCE((SELECT SUM(amount) FROM withdrawals WHERE employee_id = users.id AND status IN ("PENDING", "COMPLETED")), 0) as total_keluar')
             )
             ->leftJoin('divisions', 'users.division_id', '=', 'divisions.id')
+            ->whereNull('users.deleted_at')
             ->whereExists(function ($query) {
                 $query->select(DB::raw(1))
                     ->from('transactions')
