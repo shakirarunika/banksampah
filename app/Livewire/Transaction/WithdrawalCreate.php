@@ -52,14 +52,16 @@ class WithdrawalCreate extends Component
     public function saveWithdrawal()
     {
         $throttleKey = 'withdrawal-submit-'.auth()->id();
+        $maxAttempts = (int) env('WITHDRAWAL_THROTTLE_LIMIT', 10);
+        $decaySeconds = (int) env('WITHDRAWAL_THROTTLE_DURATION', 30);
         
-        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($throttleKey, 3)) {
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($throttleKey, $maxAttempts)) {
             $seconds = \Illuminate\Support\Facades\RateLimiter::availableIn($throttleKey);
             session()->flash('error', "Sistem mendeteksi terlalu banyak klik. Silakan tunggu {$seconds} detik.");
             return;
         }
         
-        \Illuminate\Support\Facades\RateLimiter::hit($throttleKey, 30); // 30 detik cooldown
+        \Illuminate\Support\Facades\RateLimiter::hit($throttleKey, $decaySeconds);
 
         $this->validate([
             'employee' => 'required',
