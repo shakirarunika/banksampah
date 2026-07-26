@@ -95,7 +95,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-50">
-                        @foreach($comparisonData as $data)
+                        @forelse($comparisonData as $data)
                             <tr class="hover:bg-slate-50 transition-colors">
                                 <td class="px-6 py-4 whitespace-nowrap border-r border-slate-50 font-black text-slate-700 text-xs uppercase">{{ $data['name'] }}</td>
                                 <td class="px-4 py-4 whitespace-nowrap border-r border-slate-50 text-right font-black text-emerald-600 text-xs">{{ number_format($data['inbound_kg'], 2, ',', '.') }} <span class="text-[9px] opacity-50">kg</span></td>
@@ -111,7 +111,16 @@
                                     {{ number_format($data['profit'], 0, ',', '.') }}
                                 </td>
                             </tr>
-                        @endforeach
+                        @empty
+                            <tr>
+                                <td colspan="7" class="p-12 text-center">
+                                    <div class="text-4xl mb-3">📊</div>
+                                    <div class="text-xs font-black text-slate-400 uppercase tracking-widest">
+                                        Belum ada data untuk periode ini
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
                     <tfoot class="bg-slate-50 font-black text-xs uppercase tracking-widest border-t border-slate-200">
                         <tr>

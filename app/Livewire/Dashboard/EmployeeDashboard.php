@@ -11,6 +11,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
+#[\Livewire\Attributes\Title('Dashboard')]
 class EmployeeDashboard extends Component
 {
     public function render()
@@ -33,11 +34,7 @@ class EmployeeDashboard extends Component
                 $q->where('status', \App\Enums\TransactionStatus::POSTED->value);
             })->sum('weight_kg');
 
-            $my_masuk = TransactionItem::whereHas('transaction', function ($q) use ($user) {
-                $q->where('employee_id', $user->id)->where('status', \App\Enums\TransactionStatus::POSTED->value);
-            })->sum('subtotal');
-            $my_keluar = Withdrawal::where('employee_id', $user->id)->whereIn('status', ['PENDING', 'COMPLETED'])->sum('amount');
-            $my_balance = $my_masuk - $my_keluar;
+            $my_balance = $user->balance;
 
             // --- DATA GRAFIK (TREN 6 BULAN TERAKHIR) ---
             $chartLabels = [];
@@ -62,9 +59,9 @@ class EmployeeDashboard extends Component
                     'users.name',
                     'users.employee_code',
                     'divisions.name as division_name',
-                    DB::raw('COALESCE((SELECT SUM(ti.subtotal) FROM transaction_items ti JOIN transactions t ON t.id = ti.transaction_id WHERE t.employee_id = users.id AND t.status = "'.\App\Enums\TransactionStatus::POSTED->value.'"), 0) as total_masuk'),
-                    DB::raw('COALESCE((SELECT SUM(amount) FROM withdrawals WHERE employee_id = users.id AND status IN ("PENDING", "COMPLETED")), 0) as total_keluar'),
-                    DB::raw('COALESCE((SELECT SUM(ti.weight_kg) FROM transaction_items ti JOIN transactions t ON t.id = ti.transaction_id WHERE t.employee_id = users.id AND t.status = "'.\App\Enums\TransactionStatus::POSTED->value.'"), 0) as total_kg')
+                    DB::raw('COALESCE((SELECT SUM(ti.subtotal) FROM transaction_items ti JOIN transactions t ON t.id = ti.transaction_id WHERE t.employee_id = users.id AND t.status = "'.\App\Enums\TransactionStatus::POSTED->value.'" AND t.deleted_at IS NULL), 0) as total_masuk'),
+                    DB::raw('COALESCE((SELECT SUM(amount) FROM withdrawals WHERE employee_id = users.id AND status IN ("PENDING", "COMPLETED") AND deleted_at IS NULL), 0) as total_keluar'),
+                    DB::raw('COALESCE((SELECT SUM(ti.weight_kg) FROM transaction_items ti JOIN transactions t ON t.id = ti.transaction_id WHERE t.employee_id = users.id AND t.status = "'.\App\Enums\TransactionStatus::POSTED->value.'" AND t.deleted_at IS NULL), 0) as total_kg')
                 )
                 ->leftJoin('divisions', 'users.division_id', '=', 'divisions.id')
                 ->whereNull('users.deleted_at')
@@ -72,17 +69,17 @@ class EmployeeDashboard extends Component
                     $query->select(DB::raw(1))
                         ->from('transactions')
                         ->whereColumn('transactions.employee_id', 'users.id')
+                        ->whereNull('transactions.deleted_at')
                         ->where('status', \App\Enums\TransactionStatus::POSTED->value);
                 })
+                ->orderByRaw('(total_masuk - total_keluar) DESC')
+                ->limit(5)
                 ->get()
                 ->map(function ($item) {
                     $item->total_uang = $item->total_masuk - $item->total_keluar;
 
                     return $item;
-                })
-                ->sortByDesc('total_uang')
-                ->take(5)
-                ->values();
+                });
 
             $recent_transactions = Transaction::with(['employee.division', 'items.wasteType'])
                 ->latest('weighing_at') // Urutkan berdasarkan tanggal timbang
@@ -103,15 +100,7 @@ class EmployeeDashboard extends Component
         // ==========================================
         // 2. JALUR KARYAWAN BIASA (NASABAH)
         // ==========================================
-        $karyawan_masuk = TransactionItem::whereHas('transaction', function ($q) use ($user) {
-            $q->where('employee_id', $user->id)->where('status', \App\Enums\TransactionStatus::POSTED->value);
-        })->sum('subtotal');
-
-        $karyawan_keluar = Withdrawal::where('employee_id', $user->id)
-            ->whereIn('status', ['PENDING', 'COMPLETED'])
-            ->sum('amount');
-
-        $currentBalance = $karyawan_masuk - $karyawan_keluar;
+        $currentBalance = $user->balance;
 
         $totalWeight = TransactionItem::whereHas('transaction', function ($q) use ($user) {
             $q->where('employee_id', $user->id)->where('status', \App\Enums\TransactionStatus::POSTED->value);
@@ -140,6 +129,7 @@ class EmployeeDashboard extends Component
             ->join('transaction_items', 'transactions.id', '=', 'transaction_items.transaction_id')
             ->leftJoin('divisions', 'users.division_id', '=', 'divisions.id')
             ->whereNull('users.deleted_at')
+            ->whereNull('transactions.deleted_at')
             ->where('transactions.status', \App\Enums\TransactionStatus::POSTED->value)
             ->select(
                 'users.name',
@@ -159,8 +149,8 @@ class EmployeeDashboard extends Component
                 'users.name',
                 'users.employee_code',
                 'divisions.name as division_name',
-                DB::raw('COALESCE((SELECT SUM(ti.subtotal) FROM transaction_items ti JOIN transactions t ON t.id = ti.transaction_id WHERE t.employee_id = users.id AND t.status = "'.\App\Enums\TransactionStatus::POSTED->value.'"), 0) as total_masuk'),
-                DB::raw('COALESCE((SELECT SUM(amount) FROM withdrawals WHERE employee_id = users.id AND status IN ("PENDING", "COMPLETED")), 0) as total_keluar')
+                DB::raw('COALESCE((SELECT SUM(ti.subtotal) FROM transaction_items ti JOIN transactions t ON t.id = ti.transaction_id WHERE t.employee_id = users.id AND t.status = "'.\App\Enums\TransactionStatus::POSTED->value.'" AND t.deleted_at IS NULL), 0) as total_masuk'),
+                DB::raw('COALESCE((SELECT SUM(amount) FROM withdrawals WHERE employee_id = users.id AND status IN ("PENDING", "COMPLETED") AND deleted_at IS NULL), 0) as total_keluar')
             )
             ->leftJoin('divisions', 'users.division_id', '=', 'divisions.id')
             ->whereNull('users.deleted_at')
@@ -168,16 +158,17 @@ class EmployeeDashboard extends Component
                 $query->select(DB::raw(1))
                     ->from('transactions')
                     ->whereColumn('transactions.employee_id', 'users.id')
+                    ->whereNull('transactions.deleted_at')
                     ->where('status', \App\Enums\TransactionStatus::POSTED->value);
             })
+            ->orderByRaw('(total_masuk - total_keluar) DESC')
+            ->limit(5)
             ->get()
             ->map(function ($item) {
                 $item->total_uang = $item->total_masuk - $item->total_keluar;
+
                 return $item;
-            })
-            ->sortByDesc('total_uang')
-            ->take(5)
-            ->values();
+            });
 
         $recentTransactions = Transaction::with('items.wasteType')
             ->where('employee_id', $user->id)

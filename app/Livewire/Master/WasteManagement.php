@@ -13,6 +13,8 @@ use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 use Maatwebsite\Excel\Facades\Excel;
 
+#[\Livewire\Attributes\Layout('layouts.app')]
+#[\Livewire\Attributes\Title('Jenis Sampah')]
 class WasteManagement extends Component
 {
     use WithFileUploads, WithPagination;

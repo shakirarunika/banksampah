@@ -2,15 +2,15 @@
 
 namespace App\Livewire\Transaction;
 
-use App\Models\TransactionItem;
+use App\Helpers\ActivityLogger;
 use App\Models\User;
 use App\Models\Withdrawal;
-use App\Helpers\ActivityLogger;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
+#[\Livewire\Attributes\Title('Pencairan Saldo')]
 class WithdrawalCreate extends Component
 {
     public $search_nik = '';
@@ -32,35 +32,23 @@ class WithdrawalCreate extends Component
             ->where('is_active', true)
             ->first();
 
-        if ($this->employee) {
-            // Hitung total uang masuk (Hanya yang POSTED)
-            $total_masuk = TransactionItem::whereHas('transaction', function ($q) {
-                $q->where('employee_id', $this->employee->id)->where('status', \App\Enums\TransactionStatus::POSTED->value);
-            })->sum('subtotal');
-
-            // Hitung total uang keluar (PENDING & COMPLETED dianggap sudah keluar biar gak double tarik)
-            $total_keluar = Withdrawal::where('employee_id', $this->employee->id)
-                ->whereIn('status', ['PENDING', 'COMPLETED'])
-                ->sum('amount');
-
-            $this->current_balance = $total_masuk - $total_keluar;
-        } else {
-            $this->current_balance = 0;
-        }
+        $this->current_balance = $this->employee?->balance ?? 0;
     }
 
     public function saveWithdrawal()
     {
         $throttleKey = 'withdrawal-submit-'.auth()->id();
-        $maxAttempts = (int) env('WITHDRAWAL_THROTTLE_LIMIT', 10);
-        $decaySeconds = (int) env('WITHDRAWAL_THROTTLE_DURATION', 30);
-        
+        // env() di sini bakal null kalau config di-cache — wajib lewat config()
+        $maxAttempts = (int) config('app.throttle.withdrawal.limit');
+        $decaySeconds = (int) config('app.throttle.withdrawal.decay');
+
         if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($throttleKey, $maxAttempts)) {
             $seconds = \Illuminate\Support\Facades\RateLimiter::availableIn($throttleKey);
             session()->flash('error', "Sistem mendeteksi terlalu banyak klik. Silakan tunggu {$seconds} detik.");
+
             return;
         }
-        
+
         \Illuminate\Support\Facades\RateLimiter::hit($throttleKey, $decaySeconds);
 
         $this->validate([
@@ -77,26 +65,16 @@ class WithdrawalCreate extends Component
 
         DB::beginTransaction();
         try {
-            // Lock data nasabah secara pesimis untuk mencegah Race Condition
+            // Lock data nasabah secara pesimis untuk mencegah Race Condition,
+            // lalu hitung ulang saldo di dalam transaksi DB
             $lockedEmployee = User::where('id', $this->employee->id)->lockForUpdate()->first();
-
-            // Hitung ulang saldo secara ATOMIK di dalam transaksi DB
-            // Ini mencegah race condition jika 2 petugas submit bersamaan
-            $total_masuk = TransactionItem::whereHas('transaction', function ($q) use ($lockedEmployee) {
-                $q->where('employee_id', $lockedEmployee->id)
-                  ->where('status', \App\Enums\TransactionStatus::POSTED->value);
-            })->sum('subtotal');
-
-            $total_keluar = Withdrawal::where('employee_id', $lockedEmployee->id)
-                ->whereIn('status', ['PENDING', 'COMPLETED'])
-                ->sum('amount');
-
-            $saldo_aktual = $total_masuk - $total_keluar;
+            $saldo_aktual = $lockedEmployee->balance;
 
             // Validasi saldo secara atomik
             if ($this->amount > $saldo_aktual) {
                 DB::rollBack();
                 session()->flash('error', 'Saldo tidak mencukupi! Saldo aktual: Rp '.number_format($saldo_aktual, 0, ',', '.'));
+
                 return;
             }
 
@@ -104,7 +82,7 @@ class WithdrawalCreate extends Component
                 'employee_id' => $this->employee->id,
                 'officer_id' => auth()->id(),
                 'amount' => $this->amount,
-                'status' => 'PENDING',
+                'status' => \App\Enums\WithdrawalStatus::PENDING->value,
                 'notes' => $this->notes,
             ]);
 
@@ -112,7 +90,7 @@ class WithdrawalCreate extends Component
 
             ActivityLogger::log(
                 'new_withdrawal',
-                "Mengajukan pencairan Rp ".number_format($this->amount, 0, ',', '.').' untuk '.$this->employee->name." (NIK: {$this->employee->employee_code})",
+                'Mengajukan pencairan Rp '.number_format($this->amount, 0, ',', '.').' untuk '.$this->employee->name." (NIK: {$this->employee->employee_code})",
                 'Withdrawal',
                 $withdrawal->id
             );
@@ -145,12 +123,12 @@ class WithdrawalCreate extends Component
     {
         $withdrawal = Withdrawal::find($id);
 
-        if ($withdrawal && $withdrawal->status === 'PENDING') {
-            $withdrawal->update(['status' => 'COMPLETED']);
+        if ($withdrawal && $withdrawal->status === \App\Enums\WithdrawalStatus::PENDING->value) {
+            $withdrawal->update(['status' => \App\Enums\WithdrawalStatus::COMPLETED->value]);
 
             ActivityLogger::log(
                 'complete_withdrawal',
-                "Menyelesaikan pencairan Rp ".number_format($withdrawal->amount, 0, ',', '.').' untuk '.$withdrawal->employee?->name,
+                'Menyelesaikan pencairan Rp '.number_format($withdrawal->amount, 0, ',', '.').' untuk '.$withdrawal->employee?->name,
                 'Withdrawal',
                 $withdrawal->id
             );

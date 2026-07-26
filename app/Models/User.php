@@ -77,18 +77,19 @@ class User extends Authenticatable
 
     /**
      * Accessor Saldo: $user->balance
-     * Menghitung total saldo bersih = pemasukan POSTED - semua pencairan (PENDING & COMPLETED).
+     * SATU-SATUNYA sumber hitungan saldo. Semua fitur (pencairan, void, edit,
+     * dashboard) wajib pakai ini biar rumusnya gak beda-beda.
+     * Saldo = pemasukan POSTED - pencairan (PENDING & COMPLETED).
      */
     public function getBalanceAttribute()
     {
-        $masuk = $this->transactions()
-            ->where('status', \App\Enums\TransactionStatus::POSTED->value)
-            ->with('items')
-            ->get()
-            ->sum(fn ($transaction) => $transaction->items->sum('subtotal'));
+        $masuk = TransactionItem::whereHas('transaction', function ($q) {
+            $q->where('employee_id', $this->id)
+                ->where('status', \App\Enums\TransactionStatus::POSTED->value);
+        })->sum('subtotal');
 
         $keluar = $this->withdrawals()
-            ->whereIn('status', ['PENDING', 'COMPLETED'])
+            ->whereIn('status', \App\Enums\WithdrawalStatus::deducted())
             ->sum('amount');
 
         return $masuk - $keluar;
@@ -106,6 +107,24 @@ class User extends Authenticatable
     public function isPetugas(): bool
     {
         return $this->role === 'petugas';
+    }
+
+    public function isAdminTimbang(): bool
+    {
+        return $this->role === 'admin_timbang';
+    }
+
+    /**
+     * Label role yang enak dibaca: $user->role_label
+     */
+    public function getRoleLabelAttribute(): string
+    {
+        return match ($this->role) {
+            'admin' => 'Administrator',
+            'petugas' => 'Petugas Timbangan',
+            'admin_timbang' => 'Admin Timbang',
+            default => 'Nasabah',
+        };
     }
 
     public function isKaryawan(): bool

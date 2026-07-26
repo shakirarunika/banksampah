@@ -123,4 +123,21 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Rate Limit Form Transaksi & Pencairan
+    |--------------------------------------------------------------------------
+    */
+
+    'throttle' => [
+        'transaction' => [
+            'limit' => env('TRANSACTION_THROTTLE_LIMIT', 10),
+            'decay' => env('TRANSACTION_THROTTLE_DURATION', 30),
+        ],
+        'withdrawal' => [
+            'limit' => env('WITHDRAWAL_THROTTLE_LIMIT', 10),
+            'decay' => env('WITHDRAWAL_THROTTLE_DURATION', 30),
+        ],
+    ],
+
 ];

@@ -1,10 +1,10 @@
 <?php
 
 use App\Livewire\Dashboard\EmployeeDashboard;
+use App\Livewire\Master\ActivityLogIndex;
 use App\Livewire\Master\DivisionManagement;
 use App\Livewire\Master\UserManagement;
 use App\Livewire\Master\WasteManagement;
-use App\Livewire\Master\ActivityLogIndex;
 use App\Livewire\Transaction\TransactionCreate;
 use App\Livewire\Transaction\TransactionIndex;
 use App\Livewire\Transaction\WithdrawalCreate;
@@ -48,10 +48,14 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/pencairan', WithdrawalCreate::class)->name('withdrawals.index');
     });
 
+    // Data Karyawan: admin + admin timbang
+    Route::get('/master/karyawan', UserManagement::class)
+        ->middleware('can:manage-users')
+        ->name('master.users');
+
     // 4. AKSES ADMIN (Master Data)
     Route::middleware(['can:access-admin'])->group(function () {
         Route::get('/master/sampah', WasteManagement::class)->name('master.waste');
-        Route::get('/master/karyawan', UserManagement::class)->name('master.users');
         Route::get('/master/divisi', DivisionManagement::class)->name('master.division');
         Route::get('/master/log-aktivitas', ActivityLogIndex::class)->name('master.activity-log');
 

@@ -5,12 +5,12 @@ namespace App\Livewire\Transaction;
 use App\Models\Transaction;
 use App\Models\TransactionItem;
 use App\Models\WasteType;
-use App\Models\Withdrawal;
 use DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
+#[\Livewire\Attributes\Title('Edit Timbangan')]
 class TransactionEdit extends Component
 {
     public Transaction $transaction;
@@ -43,6 +43,7 @@ class TransactionEdit extends Component
         // Guard: transaksi yang sudah di-void tidak boleh diedit
         if ($this->transaction->status === \App\Enums\TransactionStatus::CANCELLED) {
             session()->flash('error', 'Transaksi ini sudah dibatalkan (void) dan tidak dapat diedit.');
+
             return redirect()->route('transactions.index');
         }
 
@@ -53,22 +54,35 @@ class TransactionEdit extends Component
 
         DB::beginTransaction();
         try {
-            // --- VALIDASI SALDO BRUTAL ---
+            // --- TENTUKAN HARGA PER ITEM ---
+            // Item lama keep harga historisnya (price_at_time dari DB, bukan dari
+            // client biar gak bisa di-tamper). Harga sekarang cuma buat item baru
+            // atau item yang jenis sampahnya diganti.
+            $originalItems = $this->transaction->items->keyBy('id');
+            $pricedItems = [];
             $total_nilai_baru = 0;
+
             foreach ($this->items as $item) {
-                $waste = WasteType::with('currentPrice')->find($item['waste_type_id']);
-                $total_nilai_baru += $item['weight_kg'] * ($waste->currentPrice->price_per_kg ?? 0);
+                $original = isset($item['id']) ? $originalItems->get($item['id']) : null;
+
+                if ($original && $original->waste_type_id == $item['waste_type_id']) {
+                    $price = $original->price_at_time;
+                } else {
+                    $waste = WasteType::with('currentPrice')->find($item['waste_type_id']);
+                    $price = $waste->currentPrice->price_per_kg ?? 0;
+                }
+
+                $pricedItems[] = [
+                    'waste_type_id' => $item['waste_type_id'],
+                    'weight_kg' => $item['weight_kg'],
+                    'price' => $price,
+                ];
+                $total_nilai_baru += $item['weight_kg'] * $price;
             }
 
-            $total_masuk_lama = TransactionItem::whereHas('transaction', function ($q) {
-                $q->where('employee_id', $this->transaction->employee_id)->where('status', \App\Enums\TransactionStatus::POSTED->value);
-            })->sum('subtotal');
-
-            $total_keluar = Withdrawal::where('employee_id', $this->transaction->employee_id)
-                ->whereIn('status', ['PENDING', 'COMPLETED'])->sum('amount');
-
+            // --- VALIDASI SALDO BRUTAL ---
             $nilai_transaksi_ini_lama = $this->transaction->items->sum('subtotal');
-            $saldo_tanpa_transaksi_ini = $total_masuk_lama - $total_keluar - $nilai_transaksi_ini_lama;
+            $saldo_tanpa_transaksi_ini = $this->transaction->employee->balance - $nilai_transaksi_ini_lama;
 
             if (($saldo_tanpa_transaksi_ini + $total_nilai_baru) < 0) {
                 session()->flash('error', 'Gagal Update! Perubahan ini bikin saldo karyawan jadi minus.');
@@ -80,16 +94,13 @@ class TransactionEdit extends Component
             // Hapus item lama, ganti baru (cara paling bersih buat many-to-many edit)
             $this->transaction->items()->delete();
 
-            foreach ($this->items as $itemData) {
-                $waste = WasteType::with('currentPrice')->find($itemData['waste_type_id']);
-                $price = $waste->currentPrice->price_per_kg ?? 0;
-
+            foreach ($pricedItems as $itemData) {
                 TransactionItem::create([
                     'transaction_id' => $this->transaction->id,
                     'waste_type_id' => $itemData['waste_type_id'],
                     'weight_kg' => $itemData['weight_kg'],
-                    'price_at_time' => $price,
-                    'subtotal' => $itemData['weight_kg'] * $price,
+                    'price_at_time' => $itemData['price'],
+                    'subtotal' => $itemData['weight_kg'] * $itemData['price'],
                 ]);
             }
 

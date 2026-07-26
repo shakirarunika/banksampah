@@ -68,7 +68,7 @@
                                         {{ $log->actor?->name ?? '— (Akun Dihapus)' }}
                                     </div>
                                     <div class="text-[10px] font-bold text-violet-500 uppercase mt-0.5">
-                                        {{ $log->actor?->role ?? '' }}
+                                        {{ $log->actor?->role_label ?? '' }}
                                     </div>
                                 </td>
 

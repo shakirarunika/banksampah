@@ -97,6 +97,12 @@ new class extends Component {
                                 </x-dropdown>
                             </div>
                         @endcan
+
+                        @if (auth()->user()->isAdminTimbang())
+                            <x-nav-link :href="route('master.users')" :active="request()->routeIs('master.users')" wire:navigate>
+                                <span class="font-black text-[10px] uppercase tracking-widest">{{ __('Data Karyawan') }}</span>
+                            </x-nav-link>
+                        @endif
                     </div>
                 @endauth
             </div>
@@ -106,7 +112,7 @@ new class extends Component {
                     <div class="mr-3 text-right">
                         <div class="text-xs font-bold text-gray-800 uppercase leading-none">{{ auth()->user()->name }}</div>
                         <div class="text-[10px] text-emerald-600 font-bold uppercase tracking-widest">
-                            {{ auth()->user()->role }}</div>
+                            {{ auth()->user()->role_label }}</div>
                     </div>
 
                     <x-dropdown align="right" width="48">
@@ -176,6 +182,11 @@ new class extends Component {
                         {{ __('Log Aktivitas') }}
                     </x-responsive-nav-link>
                 @endcan
+                @if (auth()->user()->isAdminTimbang())
+                    <x-responsive-nav-link :href="route('master.users')" :active="request()->routeIs('master.users')" wire:navigate>
+                        {{ __('Data Karyawan') }}
+                    </x-responsive-nav-link>
+                @endif
             </div>
             <div class="pt-4 pb-1 border-t border-gray-200">
                 <div class="px-4">

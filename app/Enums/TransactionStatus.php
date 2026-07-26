@@ -10,7 +10,7 @@ enum TransactionStatus: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::PENDING => 'Menunggu',
             self::POSTED => 'Berhasil',
             self::CANCELLED => 'Dibatalkan',

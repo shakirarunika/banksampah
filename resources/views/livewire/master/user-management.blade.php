@@ -80,17 +80,20 @@
                             @enderror
                         </div>
 
-                        <div>
-                            <label
-                                class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Akses
-                                Sistem (Role)</label>
-                            <select wire:model="role"
-                                class="w-full px-4 py-3 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 font-black text-slate-700 uppercase text-xs transition-all shadow-sm">
-                                <option value="karyawan">Nasabah (User)</option>
-                                <option value="petugas">Petugas Timbangan</option>
-                                <option value="admin">Administrator</option>
-                            </select>
-                        </div>
+                        @can('access-admin')
+                            <div>
+                                <label
+                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Akses
+                                    Sistem (Role)</label>
+                                <select wire:model="role"
+                                    class="w-full px-4 py-3 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 font-black text-slate-700 uppercase text-xs transition-all shadow-sm">
+                                    <option value="karyawan">Nasabah (User)</option>
+                                    <option value="petugas">Petugas Timbangan</option>
+                                    <option value="admin_timbang">Admin Timbang</option>
+                                    <option value="admin">Administrator</option>
+                                </select>
+                            </div>
+                        @endcan
 
                         @if ($isEditMode)
                             <div
@@ -125,6 +128,7 @@
 
             <div class="lg:col-span-2 space-y-8">
 
+                @can('access-admin')
                 <div
                     class="bg-white p-8 border-2 border-dashed border-emerald-200 rounded-3xl shadow-sm relative overflow-hidden group">
                     <div
@@ -190,6 +194,7 @@
                         </form>
                     </div>
                 </div>
+                @endcan
 
                 <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
                     <div
@@ -223,7 +228,7 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-50">
-                                @foreach ($users as $u)
+                                @forelse ($users as $u)
                                     <tr class="hover:bg-emerald-50/20 transition-all"
                                         wire:key="user-{{ $u->id }}">
                                         <td class="p-6">
@@ -250,6 +255,10 @@
 
                                         <td class="p-6">
                                             <div class="flex justify-center items-center gap-2">
+                                                @cannot('access-admin')
+                                                    <span class="text-[9px] font-black text-slate-300 uppercase">—</span>
+                                                @endcannot
+                                                @can('access-admin')
                                                 <button wire:click="edit({{ $u->id }})"
                                                     class="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl font-black text-[10px] uppercase hover:bg-emerald-600 hover:text-white transition shadow-sm border border-emerald-100">
                                                     Profil
@@ -280,10 +289,20 @@
                                                             stroke-linejoin="round" />
                                                     </svg>
                                                 </button>
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>
-                                @endforeach
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="p-12 text-center">
+                                            <div class="text-4xl mb-3">🔍</div>
+                                            <div class="text-xs font-black text-slate-400 uppercase tracking-widest">
+                                                {{ $search ? 'Tidak ada karyawan yang cocok dengan pencarian' : 'Belum ada karyawan terdaftar' }}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>

@@ -7,6 +7,7 @@ use App\Models\VendorSaleItem;
 use App\Models\WasteType;
 use Livewire\Component;
 
+#[\Livewire\Attributes\Title('Rekonsiliasi Bulanan')]
 class Reconciliation extends Component
 {
     public $month;

@@ -17,7 +17,7 @@ class UsersImport implements ToModel, WithHeadingRow
 
         // 2. Gunakan firstOrNew dan assign explicit
         $user = User::firstOrNew(['employee_code' => $row['nik']]);
-        
+
         $user->fill([
             'name' => $row['nama_lengkap'],
             'email' => $row['email'] ?? $row['nik'].'@dasiaya.com',
@@ -25,14 +25,14 @@ class UsersImport implements ToModel, WithHeadingRow
         ]);
 
         // TIPS: Hanya set password jika user-nya beneran baru (biar password lama gak keriset)
-        if (!$user->exists) {
+        if (! $user->exists) {
             $user->password = Hash::make($row['nik']);
         }
 
         // Set kolom yang tidak ada di $fillable secara manual
         $user->role = strtolower($row['role'] ?? 'karyawan');
         $user->is_active = true;
-        
+
         $user->save();
 
         return $user;

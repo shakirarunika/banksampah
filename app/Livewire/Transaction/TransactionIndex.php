@@ -2,12 +2,10 @@
 
 namespace App\Livewire\Transaction;
 
+use App\Helpers\ActivityLogger;
 use App\Imports\WasteTransactionImport;
 use App\Models\Transaction;
-use App\Models\TransactionItem;
-use App\Models\Withdrawal;
 use App\Services\TransactionService;
-use App\Helpers\ActivityLogger;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -17,6 +15,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 #[Layout('layouts.app')]
+#[\Livewire\Attributes\Title('Data Transaksi')]
 class TransactionIndex extends Component
 {
     // Impor trait yang dibutuhkan
@@ -72,6 +71,7 @@ class TransactionIndex extends Component
 
         if (! $transaction) {
             session()->flash('error', 'Transaksi tidak ditemukan.');
+
             return;
         }
 

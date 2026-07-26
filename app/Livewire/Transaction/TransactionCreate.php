@@ -3,20 +3,19 @@
 namespace App\Livewire\Transaction;
 
 use App\Imports\WasteTransactionImport;
-use App\Models\Transaction;
-use App\Models\TransactionItem;
+use App\Livewire\Forms\TransactionForm;
 use App\Models\User;
 use App\Models\WasteType;
-use Carbon\Carbon;
 use App\Services\TransactionService;
-use Illuminate\Support\Facades\DB;
-use App\Livewire\Forms\TransactionForm;
+use Carbon\Carbon;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 #[Layout('layouts.app')]
+#[\Livewire\Attributes\Title('Input Timbangan')]
 class TransactionCreate extends Component
 {
     use WithFileUploads;
@@ -45,9 +44,13 @@ class TransactionCreate extends Component
         ]);
 
         try {
-            Excel::import(new WasteTransactionImport, $this->file_import->getRealPath());
+            $import = new WasteTransactionImport;
+            Excel::import($import, $this->file_import->getRealPath());
 
-            session()->flash('message', 'Sip! Data berhasil diimpor semua.');
+            if ($import->skipped) {
+                session()->flash('error', 'Impor selesai, tapi baris berikut dilewati: '.implode(' | ', $import->skipped));
+            }
+            session()->flash('message', 'Sip! Data berhasil diimpor.');
 
             return redirect()->route('transactions.index');
         } catch (\Exception $e) {
@@ -96,15 +99,17 @@ class TransactionCreate extends Component
     public function saveTransaction()
     {
         $throttleKey = 'transaction-submit-'.auth()->id();
-        $maxAttempts = (int) env('TRANSACTION_THROTTLE_LIMIT', 10);
-        $decaySeconds = (int) env('TRANSACTION_THROTTLE_DURATION', 30);
-        
+        // env() di sini bakal null kalau config di-cache — wajib lewat config()
+        $maxAttempts = (int) config('app.throttle.transaction.limit');
+        $decaySeconds = (int) config('app.throttle.transaction.decay');
+
         if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($throttleKey, $maxAttempts)) {
             $seconds = \Illuminate\Support\Facades\RateLimiter::availableIn($throttleKey);
             session()->flash('error', "Terlalu banyak permintaan. Silakan coba lagi dalam {$seconds} detik.");
+
             return;
         }
-        
+
         \Illuminate\Support\Facades\RateLimiter::hit($throttleKey, $decaySeconds);
 
         if (! $this->employee) {

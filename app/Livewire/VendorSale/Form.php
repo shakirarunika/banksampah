@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
+#[\Livewire\Attributes\Title('Form Penjualan Vendor')]
 class Form extends Component
 {
     use WithFileUploads;

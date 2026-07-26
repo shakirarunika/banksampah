@@ -9,6 +9,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 
 #[Layout('layouts.app')]
+#[\Livewire\Attributes\Title('Log Aktivitas')]
 class ActivityLogIndex extends Component
 {
     use WithPagination;

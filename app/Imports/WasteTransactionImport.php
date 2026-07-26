@@ -15,22 +15,35 @@ use PhpOffice\PhpSpreadsheet\Shared\Date; // WAJIB ADA BUAT KONVERSI EXCEL
 
 class WasteTransactionImport implements ToCollection, WithHeadingRow
 {
+    /** Baris yang gagal diimpor, buat ditampilkan ke user setelah selesai. */
+    public array $skipped = [];
+
     public function collection(Collection $rows)
     {
         DB::beginTransaction();
         try {
-            foreach ($rows as $row) {
+            foreach ($rows as $index => $row) {
+                $rowNumber = $index + 2; // +2: index mulai 0 dan baris 1 = header
+
                 // 1. Cari Karyawan berdasarkan NIK (Header di Excel harus: nik)
                 $user = User::where('employee_code', $row['nik'])->first();
                 if (! $user) {
+                    $this->skipped[] = "Baris {$rowNumber}: NIK '{$row['nik']}' tidak ditemukan";
+
                     continue;
                 }
 
                 // 2. Cari Jenis Sampah (Header di Excel harus: jenis_sampah)
+                // Exact match dulu biar "Plastik" gak nyangkut ke "Plastik Keras"
                 $waste = WasteType::with('currentPrice')
-                    ->where('name', 'like', '%'.$row['jenis_sampah'].'%')
-                    ->first();
+                    ->where('name', $row['jenis_sampah'])
+                    ->first()
+                    ?? WasteType::with('currentPrice')
+                        ->where('name', 'like', '%'.$row['jenis_sampah'].'%')
+                        ->first();
                 if (! $waste) {
+                    $this->skipped[] = "Baris {$rowNumber}: jenis sampah '{$row['jenis_sampah']}' tidak ditemukan";
+
                     continue;
                 }
 

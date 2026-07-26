@@ -12,6 +12,7 @@ use Livewire\WithPagination;
 use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('layouts.app')]
+#[\Livewire\Attributes\Title('Data Divisi')]
 class DivisionManagement extends Component
 {
     use WithFileUploads, WithPagination;

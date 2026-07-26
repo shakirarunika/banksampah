@@ -6,6 +6,7 @@ use App\Models\VendorSale;
 use Livewire\Component;
 use Livewire\WithPagination;
 
+#[\Livewire\Attributes\Title('Penjualan Vendor')]
 class Index extends Component
 {
     use WithPagination;
