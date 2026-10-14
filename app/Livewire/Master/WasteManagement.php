@@ -57,12 +57,13 @@ class WasteManagement extends Component
     {
         $this->validate(['file_excel' => 'required|mimes:xlsx,xls']);
         try {
-            Excel::import(new WasteTypeImport, $this->file_excel->getRealPath());
+            // Satu baris gagal = batal semua, biar master harga gak setengah ke-update
+            DB::transaction(fn () => Excel::import(new WasteTypeImport, $this->file_excel->getRealPath()));
             $this->file_excel = null;
             $this->dispatch('file-imported');
             session()->flash('message', 'Master sampah dan harga berhasil diupdate!');
         } catch (\Exception $e) {
-            session()->flash('error', 'Gagal mengimpor data! Silakan periksa kembali format file Anda.');
+            session()->flash('error', 'Gagal mengimpor data! '.$e->getMessage());
         }
     }
 
@@ -70,7 +71,7 @@ class WasteManagement extends Component
     {
         $waste = \App\Models\WasteType::findOrFail($id);
 
-        if ($waste->transactions()->exists()) {
+        if (\App\Models\TransactionItem::where('waste_type_id', $id)->exists()) {
             session()->flash('error', 'GAGAL: Jenis sampah ini sudah terikat pada Riwayat Transaksi. Tidak dapat dihapus!');
 
             return;
@@ -106,7 +107,7 @@ class WasteManagement extends Component
         $this->validate([
             'code' => 'required|unique:waste_types,code',
             'name' => 'required',
-            'price' => 'required|numeric',
+            'price' => 'required|numeric|min:0',
         ]);
 
         DB::transaction(function () {
@@ -149,7 +150,7 @@ class WasteManagement extends Component
     public function updatePrice()
     {
         $this->validate([
-            'new_price' => 'required|numeric',
+            'new_price' => 'required|numeric|min:0',
             'effective_date' => 'required',
         ]);
 

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\TransactionStatus;
 use App\Models\Transaction;
 use App\Models\TransactionItem;
+use App\Models\WasteType;
 use Exception;
 use Illuminate\Support\Facades\DB;
 
@@ -14,12 +15,28 @@ class TransactionService
      * Create a new transaction with its items.
      *
      * @param  array  $data  Transaction header data (employee_id, officer_id, weighing_at)
-     * @param  array  $items  List of items (waste_type_id, weight, price, subtotal)
+     * @param  array  $items  List of items (waste_type_id, weight). Harga & subtotal
+     *                        selalu dihitung ulang di sini dari harga DB — nilai dari
+     *                        client (Livewire public property) gak dipercaya.
      *
      * @throws Exception
      */
     public function createTransaction(array $data, array $items): Transaction
     {
+        foreach ($items as $i => $item) {
+            if (! is_numeric($item['weight'] ?? null) || $item['weight'] <= 0) {
+                throw new Exception('Berat sampah harus lebih dari 0.');
+            }
+
+            $waste = WasteType::with('currentPrice')->find($item['waste_type_id'] ?? null);
+            if (! $waste) {
+                throw new Exception('Jenis sampah tidak valid.');
+            }
+
+            $items[$i]['price'] = $waste->currentPrice->price_per_kg ?? 0;
+            $items[$i]['subtotal'] = $item['weight'] * $items[$i]['price'];
+        }
+
         DB::beginTransaction();
         try {
             $transaction = Transaction::create([

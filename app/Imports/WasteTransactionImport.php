@@ -2,10 +2,9 @@
 
 namespace App\Imports;
 
-use App\Models\Transaction;
-use App\Models\TransactionItem;
 use App\Models\User;
 use App\Models\WasteType;
+use App\Services\TransactionService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -47,8 +46,12 @@ class WasteTransactionImport implements ToCollection, WithHeadingRow
                     continue;
                 }
 
-                $price = $waste->currentPrice->price_per_kg ?? 0;
-                $weight = (float) $row['berat']; // Header di Excel: berat
+                $weight = $row['berat']; // Header di Excel: berat
+                if (! is_numeric($weight) || $weight <= 0) {
+                    $this->skipped[] = "Baris {$rowNumber}: berat '{$weight}' harus angka lebih dari 0";
+
+                    continue;
+                }
 
                 // 3. LOGIC PENYELAMAT TANGGAL (Header di Excel: tanggal)
                 $tanggalRaw = $row['tanggal'];
@@ -65,22 +68,12 @@ class WasteTransactionImport implements ToCollection, WithHeadingRow
                 // Set jam biar gak 00:00 semua (pake jam sekarang aja biar rapi)
                 $weighingAt = $tanggalParsed->setHour(now()->hour)->setMinute(now()->minute);
 
-                // 4. Buat Transaksi Induk
-                $transaction = Transaction::create([
+                // 4. Simpan lewat service biar harga & validasinya sama kayak input manual
+                app(TransactionService::class)->createTransaction([
                     'employee_id' => $user->id,
                     'officer_id' => auth()->id(),
                     'weighing_at' => $weighingAt,
-                    'status' => \App\Enums\TransactionStatus::POSTED->value,
-                ]);
-
-                // 5. Buat Item Transaksi
-                TransactionItem::create([
-                    'transaction_id' => $transaction->id,
-                    'waste_type_id' => $waste->id,
-                    'weight_kg' => $weight,
-                    'price_at_time' => $price,
-                    'subtotal' => $weight * $price,
-                ]);
+                ], [['waste_type_id' => $waste->id, 'weight' => $weight]]);
             }
             DB::commit();
         } catch (\Exception $e) {

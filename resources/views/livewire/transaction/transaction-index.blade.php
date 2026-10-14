@@ -249,7 +249,7 @@
             <div class="mt-4 text-right">
                 <button
                     wire:click="resetAllTransactions"
-                    wire:confirm="⚠️ YAKIN MAU HAPUS SEMUA DATA? Aksi ini permanen dan akan menghanguskan semua saldo karyawan!"
+                    wire:confirm="⚠️ YAKIN MAU HAPUS SEMUA DATA TRANSAKSI? Semua saldo karyawan jadi nol. Hanya bisa kalau belum ada data pencairan."
                     class="text-[10px] font-black text-red-400 hover:text-red-600 uppercase tracking-widest transition">
                     ⚠️ Reset Seluruh Data Transaksi
                 </button>

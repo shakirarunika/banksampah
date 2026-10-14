@@ -27,12 +27,6 @@
 
             </div>
 
-            <div class="p-8 bg-white shadow-sm border border-red-50 rounded-2xl">
-                <div class="max-w-xl border-l-4 border-red-500 pl-6">
-                    <livewire:profile.delete-user-form />
-                </div>
-            </div>
-
         </div>
     </div>
 </x-app-layout>

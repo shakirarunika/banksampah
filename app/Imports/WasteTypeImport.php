@@ -11,6 +11,10 @@ class WasteTypeImport implements ToModel, WithHeadingRow
 {
     public function model(array $row)
     {
+        if (! is_numeric($row['harga_per_kg'] ?? null) || $row['harga_per_kg'] < 0) {
+            throw new \Exception("Harga '{$row['harga_per_kg']}' untuk kode {$row['kode_sampah']} tidak valid (harus angka, minimal 0).");
+        }
+
         // 1. Update atau Buat Jenis Sampah
         $waste = WasteType::updateOrCreate(
             ['code' => $row['kode_sampah']],

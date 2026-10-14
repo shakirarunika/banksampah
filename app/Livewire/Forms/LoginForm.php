@@ -32,7 +32,8 @@ class LoginForm extends Form
         $this->ensureIsNotRateLimited();
 
         // Pastikan di sini pake 'employee_code'
-        if (! Auth::attempt($this->only('employee_code', 'password'), $this->remember)) {
+        // is_active ikut dicek: karyawan yang dinonaktifkan gak boleh masuk
+        if (! Auth::attempt([...$this->only('employee_code', 'password'), 'is_active' => true], $this->remember)) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([

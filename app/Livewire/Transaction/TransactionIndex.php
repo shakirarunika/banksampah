@@ -115,10 +115,17 @@ class TransactionIndex extends Component
             return;
         }
 
+        // Kalau masih ada pencairan, saldo semua karyawan bakal minus setelah reset
+        if (\App\Models\Withdrawal::exists()) {
+            session()->flash('error', 'Reset ditolak! Masih ada data pencairan — saldo karyawan bakal minus.');
+
+            return;
+        }
+
         DB::beginTransaction();
         try {
-            // Hapus detail dulu, baru induk
-            \App\Models\TransactionItem::query()->delete();
+            // Soft delete induknya aja; item tetap ada biar bisa di-restore
+            // (semua hitungan saldo lewat whereHas('transaction') jadi otomatis dikecualikan)
             \App\Models\Transaction::query()->delete();
 
             DB::commit();
