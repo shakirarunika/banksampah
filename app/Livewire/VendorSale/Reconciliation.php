@@ -11,6 +11,7 @@ use Livewire\Component;
 class Reconciliation extends Component
 {
     public $month;
+
     public $year;
 
     public function mount()
@@ -21,14 +22,17 @@ class Reconciliation extends Component
 
     public function render()
     {
-        $startDate = \Carbon\Carbon::create($this->year, $this->month, 1)->startOfDay();
+        // Nilai dari client bisa ngaco (kosong / bulan 13) — jepit ke rentang valid
+        $month = min(12, max(1, (int) $this->month));
+        $year = min(2100, max(2000, (int) $this->year ?: now()->year));
+        $startDate = \Carbon\Carbon::create($year, $month, 1)->startOfDay();
         $endDate = $startDate->copy()->endOfMonth()->endOfDay();
 
         // 1. Ambil data agregat Inbound (Setoran Karyawan) bulan ini
         $inboundItems = TransactionItem::whereHas('transaction', function ($q) use ($startDate, $endDate) {
             $q->whereBetween('weighing_at', [$startDate, $endDate])
               // Hanya hitung yang sudah POSTED / bukan CANCELLED
-              ->where('status', '!=', \App\Enums\TransactionStatus::CANCELLED->value);
+                ->where('status', '!=', \App\Enums\TransactionStatus::CANCELLED->value);
         })->get();
 
         $totalInboundKg = $inboundItems->sum('weight_kg');
@@ -49,7 +53,7 @@ class Reconciliation extends Component
         // 3. Hitung Kalkulasi
         $shrinkageKg = $totalInboundKg - $totalOutboundKg;
         $shrinkagePercent = $totalInboundKg > 0 ? ($shrinkageKg / $totalInboundKg) * 100 : 0;
-        
+
         $profitMargin = $netOutboundPrice - $totalInboundPrice;
 
         // 4. Data per Kategori

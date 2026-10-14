@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 use Livewire\Volt\Component;
@@ -20,7 +21,10 @@ new class extends Component
         try {
             $validated = $this->validate([
                 'current_password' => ['required', 'string', 'current_password'],
-                'password' => ['required', 'string', Password::defaults(), 'confirmed'],
+                // NIK = password default, gampang ditebak
+                'password' => ['required', 'string', Password::defaults(), 'confirmed', Rule::notIn([Auth::user()->employee_code])],
+            ], [
+                'password.not_in' => 'Password baru tidak boleh sama dengan NIK.',
             ]);
         } catch (ValidationException $e) {
             $this->reset('current_password', 'password', 'password_confirmation');
@@ -28,9 +32,17 @@ new class extends Component
             throw $e;
         }
 
-        Auth::user()->update([
-            'password' => Hash::make($validated['password']),
-        ]);
+        $user = Auth::user();
+        $wasForced = $user->must_change_password;
+        $user->password = Hash::make($validated['password']);
+        $user->must_change_password = false;
+        $user->save();
+
+        if ($wasForced) {
+            $this->redirect(route('dashboard', absolute: false), navigate: true);
+
+            return;
+        }
 
         $this->reset('current_password', 'password', 'password_confirmation');
 

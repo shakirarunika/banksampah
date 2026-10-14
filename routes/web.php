@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PrintController;
 use App\Livewire\Dashboard\EmployeeDashboard;
 use App\Livewire\Master\ActivityLogIndex;
 use App\Livewire\Master\DivisionManagement;
@@ -10,19 +11,11 @@ use App\Livewire\Transaction\BalanceLedger;
 use App\Livewire\Transaction\TransactionCreate;
 use App\Livewire\Transaction\TransactionIndex;
 use App\Livewire\Transaction\WithdrawalCreate;
-use App\Models\Transaction;
-use App\Models\Withdrawal;
+use App\Livewire\Transaction\WithdrawalRequest;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    // Kalau dia sudah login, lempar ke Dashboard
-    if (auth()->check()) {
-        return redirect()->route('dashboard');
-    }
-
-    // Kalau belum login, lempar ke halaman Login
-    return redirect()->route('login');
-});
+// Tamu otomatis dilempar ke login oleh middleware auth di /dashboard
+Route::redirect('/', '/dashboard');
 
 Route::middleware(['auth'])->group(function () {
 
@@ -33,6 +26,10 @@ Route::middleware(['auth'])->group(function () {
     // Sesuaikan dengan file yang lo punya, biasanya Breeze Livewire pakai ini:
     Route::view('profile', 'profile')->name('profile');
 
+    // Buat semua karyawan: riwayat saldo sendiri & pengajuan pencairan
+    Route::get('/mutasi-saya', BalanceLedger::class)->name('ledger.mine');
+    Route::get('/ajukan-pencairan', WithdrawalRequest::class)->name('withdrawals.request');
+
     // 3. AKSES PETUGAS (Transaksi & Pencairan)
     Route::middleware(['can:access-petugas'])->group(function () {
         Route::get('/transaksi', TransactionIndex::class)->name('transactions.index');
@@ -40,19 +37,10 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('/pencairan/buat', App\Livewire\Transaction\WithdrawalCreate::class)->name('withdrawals.create');
 
-        Route::get('/pencairan/cetak/{id}', function ($id) {
-            // Ambil data tarikan uang beserta relasi nama karyawan dan petugasnya
-            $withdrawal = Withdrawal::with(['employee.division', 'officer'])->findOrFail($id);
-
-            return view('print.withdrawal', compact('withdrawal'));
-        })->name('withdrawals.print')->middleware('can:access-petugas');
+        Route::get('/pencairan/cetak/{withdrawal}', [PrintController::class, 'withdrawal'])->name('withdrawals.print');
         Route::get('/transaksi/{transaction}/edit', \App\Livewire\Transaction\TransactionEdit::class)->name('transactions.edit');
 
-        Route::get('/transaksi/cetak/{transaction}', function (Transaction $transaction) {
-            $transaction->load(['employee.division', 'officer', 'items.wasteType']);
-
-            return view('print.transaction', compact('transaction'));
-        })->name('transactions.print');
+        Route::get('/transaksi/cetak/{transaction}', [PrintController::class, 'transaction'])->name('transactions.print');
 
         Route::get('/mutasi/{user}', BalanceLedger::class)->name('ledger.show');
 

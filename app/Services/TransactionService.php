@@ -3,9 +3,12 @@
 namespace App\Services;
 
 use App\Enums\TransactionStatus;
+use App\Enums\WithdrawalStatus;
 use App\Models\Transaction;
 use App\Models\TransactionItem;
+use App\Models\User;
 use App\Models\WasteType;
+use App\Models\Withdrawal;
 use Exception;
 use Illuminate\Support\Facades\DB;
 
@@ -63,6 +66,31 @@ class TransactionService
             DB::rollBack();
             throw $e;
         }
+    }
+
+    /**
+     * Buat pencairan (oleh petugas langsung PENDING, oleh karyawan REQUESTED).
+     * Baris user di-lock biar dua pencairan barengan gak bisa nembus saldo.
+     *
+     * @throws Exception kalau saldo gak cukup
+     */
+    public function createWithdrawal(User $employee, $amount, ?string $notes, ?int $officerId, WithdrawalStatus $status): Withdrawal
+    {
+        return DB::transaction(function () use ($employee, $amount, $notes, $officerId, $status) {
+            $saldo = User::whereKey($employee->id)->lockForUpdate()->first()->balance;
+
+            if ($amount > $saldo) {
+                throw new Exception('Saldo tidak mencukupi! Saldo aktual: Rp '.number_format($saldo, 0, ',', '.'));
+            }
+
+            return Withdrawal::create([
+                'employee_id' => $employee->id,
+                'officer_id' => $officerId,
+                'amount' => $amount,
+                'status' => $status->value,
+                'notes' => $notes,
+            ]);
+        });
     }
 
     /**

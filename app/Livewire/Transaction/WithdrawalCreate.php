@@ -2,10 +2,11 @@
 
 namespace App\Livewire\Transaction;
 
+use App\Enums\WithdrawalStatus;
 use App\Helpers\ActivityLogger;
 use App\Models\User;
 use App\Models\Withdrawal;
-use Illuminate\Support\Facades\DB;
+use App\Services\TransactionService;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -80,48 +81,29 @@ class WithdrawalCreate extends Component
             'amount.min' => 'Aturan Pabrik: Minimal pencairan Rp 100.000!',
         ]);
 
-        DB::beginTransaction();
         try {
-            // Lock data nasabah secara pesimis untuk mencegah Race Condition,
-            // lalu hitung ulang saldo di dalam transaksi DB
-            $lockedEmployee = User::where('id', $this->employee->id)->lockForUpdate()->first();
-            $saldo_aktual = $lockedEmployee->balance;
-
-            // Validasi saldo secara atomik
-            if ($this->amount > $saldo_aktual) {
-                DB::rollBack();
-                session()->flash('error', 'Saldo tidak mencukupi! Saldo aktual: Rp '.number_format($saldo_aktual, 0, ',', '.'));
-
-                return;
-            }
-
-            $withdrawal = Withdrawal::create([
-                'employee_id' => $this->employee->id,
-                'officer_id' => auth()->id(),
-                'amount' => $this->amount,
-                'status' => \App\Enums\WithdrawalStatus::PENDING->value,
-                'notes' => $this->notes,
-            ]);
-
-            DB::commit();
-
-            ActivityLogger::log(
-                'new_withdrawal',
-                'Mengajukan pencairan Rp '.number_format($this->amount, 0, ',', '.').' untuk '.$this->employee->name." (NIK: {$this->employee->employee_code})",
-                'Withdrawal',
-                $withdrawal->id
+            $withdrawal = app(TransactionService::class)->createWithdrawal(
+                $this->employee, $this->amount, $this->notes, auth()->id(), WithdrawalStatus::PENDING
             );
-
-            // Flash session buat tombol cetak di Blade
-            session()->flash('success', 'Pencairan dana '.$this->employee->name.' berhasil diajukan!');
-            session()->flash('print_id', $withdrawal->id);
-
-            // Reset Form tapi simpan session flash
-            return redirect()->route('withdrawals.index');
         } catch (\Exception $e) {
-            DB::rollBack();
-            session()->flash('error', 'Gagal Simpan: '.$e->getMessage());
+            session()->flash('error', $e->getMessage());
+
+            return;
         }
+
+        ActivityLogger::log(
+            'new_withdrawal',
+            'Mengajukan pencairan Rp '.number_format($this->amount, 0, ',', '.').' untuk '.$this->employee->name." (NIK: {$this->employee->employee_code})",
+            'Withdrawal',
+            $withdrawal->id
+        );
+
+        // Flash session buat tombol cetak di Blade
+        session()->flash('success', 'Pencairan dana '.$this->employee->name.' berhasil diajukan!');
+        session()->flash('print_id', $withdrawal->id);
+
+        // Reset Form tapi simpan session flash
+        return redirect()->route('withdrawals.index');
     }
 
     public function render()
@@ -138,13 +120,46 @@ class WithdrawalCreate extends Component
         return view('livewire.transaction.withdrawal-create', compact('recent_withdrawals'));
     }
 
+    // Pengajuan dari karyawan: setujui jadi PENDING (lanjut transfer) atau tolak (saldo balik)
+    public function approveRequest($id)
+    {
+        $this->decideRequest($id, WithdrawalStatus::PENDING, 'approve_withdrawal', 'Menyetujui');
+    }
+
+    public function rejectRequest($id)
+    {
+        $this->decideRequest($id, WithdrawalStatus::REJECTED, 'reject_withdrawal', 'Menolak');
+    }
+
+    private function decideRequest($id, WithdrawalStatus $status, string $action, string $verb): void
+    {
+        $withdrawal = Withdrawal::find($id);
+
+        if (! $withdrawal || $withdrawal->status !== WithdrawalStatus::REQUESTED->value) {
+            session()->flash('error', 'Pengajuan tidak ditemukan atau sudah diproses.');
+
+            return;
+        }
+
+        $withdrawal->update(['status' => $status->value, 'officer_id' => auth()->id()]);
+
+        ActivityLogger::log(
+            $action,
+            "{$verb} pengajuan pencairan Rp ".number_format($withdrawal->amount, 0, ',', '.').' dari '.$withdrawal->employee?->name,
+            'Withdrawal',
+            $withdrawal->id
+        );
+
+        session()->flash('success', "Pengajuan {$withdrawal->employee?->name} berstatus {$status->value}.");
+    }
+
     // 3. SELESAIKAN TRANSFER (Update Status)
     public function completeWithdrawal($id)
     {
         $withdrawal = Withdrawal::find($id);
 
-        if ($withdrawal && $withdrawal->status === \App\Enums\WithdrawalStatus::PENDING->value) {
-            $withdrawal->update(['status' => \App\Enums\WithdrawalStatus::COMPLETED->value]);
+        if ($withdrawal && $withdrawal->status === WithdrawalStatus::PENDING->value) {
+            $withdrawal->update(['status' => WithdrawalStatus::COMPLETED->value]);
 
             ActivityLogger::log(
                 'complete_withdrawal',

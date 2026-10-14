@@ -13,6 +13,16 @@
                     NIK: {{ $user->employee_code }} | Departemen: {{ $user->division->name ?? '-' }}
                 </p>
             </div>
+            <div class="flex flex-col sm:flex-row gap-2">
+                <a href="{{ route('ledger.mine') }}" wire:navigate
+                    class="px-5 py-3 bg-white border-2 border-emerald-600 text-emerald-700 rounded-xl font-black text-[10px] uppercase tracking-widest text-center hover:bg-emerald-50 transition">
+                    Riwayat Lengkap
+                </a>
+                <a href="{{ route('withdrawals.request') }}" wire:navigate
+                    class="px-5 py-3 bg-emerald-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest text-center hover:bg-emerald-700 transition">
+                    Ajukan Pencairan
+                </a>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-8">
@@ -171,58 +181,8 @@
 
             <div class="lg:col-span-1">
                 <div class="bg-white rounded-2xl shadow-sm border border-emerald-100 overflow-hidden sticky top-6">
-                    <div class="p-5 bg-gradient-to-br from-emerald-600 to-emerald-700 text-white">
-                        <div class="flex items-center gap-3">
-                            <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm text-xl">
-                                💰
-                            </div>
-                            <div>
-                                <h3 class="text-xs font-black uppercase tracking-[0.2em]">Top 5 Sultan Sampah</h3>
-                                <p class="text-[9px] font-bold text-emerald-100 uppercase opacity-80">Saldo Aktif Terbanyak</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="divide-y divide-gray-50 bg-white">
-                        @forelse($leaderboardBalance as $index => $hero)
-                            <div
-                                class="p-4 flex items-center gap-3 hover:bg-emerald-50/50 transition {{ $hero->employee_code == $user->employee_code ? 'bg-emerald-50 border-l-4 border-emerald-500' : '' }}">
-                                <div
-                                    class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0
-                                    {{ $index == 0
-                                        ? 'bg-yellow-400 text-white shadow-sm'
-                                        : ($index == 1
-                                            ? 'bg-slate-300 text-white'
-                                            : ($index == 2
-                                                ? 'bg-orange-300 text-white'
-                                                : 'bg-gray-100 text-gray-400')) }}">
-                                    {{ $index + 1 }}
-                                </div>
-
-                                <div class="flex-1 min-w-0">
-                                    <p
-                                        class="text-[11px] font-black text-gray-800 uppercase truncate leading-none mb-1">
-                                        {{ $hero->name }}
-                                        @if ($hero->employee_code == $user->employee_code)
-                                            <span class="text-[8px] text-emerald-600">(Anda)</span>
-                                        @endif
-                                    </p>
-                                    <p class="text-[9px] font-bold text-gray-400 tracking-tighter uppercase">NIK:
-                                        {{ $hero->employee_code }}</p>
-                                </div>
-
-                                <div class="text-right flex-shrink-0">
-                                    <p class="text-[11px] font-black text-emerald-600 leading-none mb-1">
-                                        Rp {{ number_format($hero->total_uang, 0, ',', '.') }}</p>
-                                </div>
-                            </div>
-                        @empty
-                            <div class="p-8 text-center text-gray-400 text-[10px] font-bold uppercase">Data belum tersedia</div>
-                        @endforelse
-                    </div>
-
                     <!-- LEADERBOARD BERAT -->
-                    <div class="p-5 bg-gradient-to-br from-blue-600 to-blue-700 text-white border-t-4 border-white">
+                    <div class="p-5 bg-gradient-to-br from-blue-600 to-blue-700 text-white">
                         <div class="flex items-center gap-3">
                             <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm text-xl">
                                 ⚖️

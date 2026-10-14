@@ -130,8 +130,10 @@
                     <select wire:model.live="history_status" aria-label="Filter status"
                         class="border-2 border-slate-200 rounded-xl px-4 py-2 text-xs font-bold focus:border-emerald-500 focus:ring-0">
                         <option value="">Semua Status</option>
+                        <option value="REQUESTED">REQUESTED (pengajuan)</option>
                         <option value="PENDING">PENDING</option>
                         <option value="COMPLETED">COMPLETED</option>
+                        <option value="REJECTED">REJECTED</option>
                     </select>
                 </div>
             </div>
@@ -169,12 +171,29 @@
                                 <td class="p-6 text-center">
                                     <span
                                         class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest 
-                                        {{ $wd->status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-amber-100 text-amber-700 border border-amber-200' }}">
+                                        {{ match ($wd->status) {
+                                            'COMPLETED' => 'bg-emerald-100 text-emerald-700 border border-emerald-200',
+                                            'REQUESTED' => 'bg-blue-100 text-blue-700 border border-blue-200',
+                                            'REJECTED' => 'bg-slate-100 text-slate-500 border border-slate-200',
+                                            default => 'bg-amber-100 text-amber-700 border border-amber-200',
+                                        } }}">
                                         {{ $wd->status }}
                                     </span>
                                 </td>
                                 <td class="p-6">
                                     <div class="flex justify-center gap-2">
+                                        @if ($wd->status === 'REQUESTED')
+                                            <button wire:click="approveRequest({{ $wd->id }})"
+                                                wire:confirm="Setujui pengajuan {{ $wd->employee?->name }}?"
+                                                class="px-3 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white rounded-lg text-[9px] font-black uppercase transition-all">
+                                                Setujui
+                                            </button>
+                                            <button wire:click="rejectRequest({{ $wd->id }})"
+                                                wire:confirm="Tolak pengajuan {{ $wd->employee?->name }}? Saldo akan dikembalikan."
+                                                class="px-3 py-2 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-lg text-[9px] font-black uppercase transition-all">
+                                                Tolak
+                                            </button>
+                                        @endif
                                         @if ($wd->status === 'PENDING')
                                             <button wire:click="completeWithdrawal({{ $wd->id }})"
                                                 onclick="return confirm('Sudah transfer uangnya? Status akan jadi COMPLETED.')"
@@ -187,6 +206,7 @@
                                                 </svg>
                                             </button>
                                         @endif
+                                        @if (in_array($wd->status, ['PENDING', 'COMPLETED']))
                                         <a href="{{ route('withdrawals.print', $wd->id) }}" target="_blank"
                                             class="p-2 bg-slate-50 text-slate-500 hover:bg-slate-200 rounded-lg transition-all"
                                             title="Cetak Ulang">
@@ -197,6 +217,7 @@
                                                 </path>
                                             </svg>
                                         </a>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>

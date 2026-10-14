@@ -6,13 +6,21 @@ use App\Enums\TransactionStatus;
 use App\Enums\WithdrawalStatus;
 use App\Models\User;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
 #[\Livewire\Attributes\Title('Mutasi Saldo')]
 class BalanceLedger extends Component
 {
+    #[Locked]
     public User $user;
+
+    // /mutasi/{user} buat petugas; /mutasi-saya (tanpa parameter) buat karyawan sendiri
+    public function mount(?User $user = null): void
+    {
+        $this->user = $user?->exists ? $user : auth()->user();
+    }
 
     /**
      * Gabungan setoran (POSTED) & pencairan (PENDING/COMPLETED) — rumus yang sama

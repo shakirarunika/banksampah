@@ -4,14 +4,17 @@ namespace App\Enums;
 
 enum WithdrawalStatus: string
 {
-    case PENDING = 'PENDING';
+    case REQUESTED = 'REQUESTED'; // diajukan karyawan, nunggu persetujuan petugas
+    case PENDING = 'PENDING';     // disetujui, nunggu transfer koperasi
     case COMPLETED = 'COMPLETED';
+    case REJECTED = 'REJECTED';   // ditolak petugas, saldo balik
 
     /**
      * Status yang dihitung sebagai "uang sudah keluar" dari saldo.
+     * REQUESTED ikut dihitung biar saldo yang lagi diajukan gak bisa diajukan dua kali.
      */
     public static function deducted(): array
     {
-        return [self::PENDING->value, self::COMPLETED->value];
+        return [self::REQUESTED->value, self::PENDING->value, self::COMPLETED->value];
     }
 }

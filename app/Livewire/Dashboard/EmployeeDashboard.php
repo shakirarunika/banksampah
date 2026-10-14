@@ -27,7 +27,7 @@ class EmployeeDashboard extends Component
             $masuk_global = TransactionItem::whereHas('transaction', function ($q) {
                 $q->where('status', \App\Enums\TransactionStatus::POSTED->value);
             })->sum('subtotal');
-            $keluar_global = Withdrawal::whereIn('status', ['PENDING', 'COMPLETED'])->sum('amount');
+            $keluar_global = Withdrawal::whereIn('status', \App\Enums\WithdrawalStatus::deducted())->sum('amount');
             $total_uang = $masuk_global - $keluar_global;
 
             $total_kg = TransactionItem::whereHas('transaction', function ($q) {
@@ -53,6 +53,7 @@ class EmployeeDashboard extends Component
             }
 
             // --- LEADERBOARD REAL-TIME ---
+            $deducted = "'".implode("','", \App\Enums\WithdrawalStatus::deducted())."'";
             $leaderboard = DB::table('users')
                 ->select(
                     'users.id',
@@ -60,7 +61,7 @@ class EmployeeDashboard extends Component
                     'users.employee_code',
                     'divisions.name as division_name',
                     DB::raw('COALESCE((SELECT SUM(ti.subtotal) FROM transaction_items ti JOIN transactions t ON t.id = ti.transaction_id WHERE t.employee_id = users.id AND t.status = "'.\App\Enums\TransactionStatus::POSTED->value.'" AND t.deleted_at IS NULL), 0) as total_masuk'),
-                    DB::raw('COALESCE((SELECT SUM(amount) FROM withdrawals WHERE employee_id = users.id AND status IN ("PENDING", "COMPLETED") AND deleted_at IS NULL), 0) as total_keluar'),
+                    DB::raw('COALESCE((SELECT SUM(amount) FROM withdrawals WHERE employee_id = users.id AND status IN ('.$deducted.') AND deleted_at IS NULL), 0) as total_keluar'),
                     DB::raw('COALESCE((SELECT SUM(ti.weight_kg) FROM transaction_items ti JOIN transactions t ON t.id = ti.transaction_id WHERE t.employee_id = users.id AND t.status = "'.\App\Enums\TransactionStatus::POSTED->value.'" AND t.deleted_at IS NULL), 0) as total_kg')
                 )
                 ->leftJoin('divisions', 'users.division_id', '=', 'divisions.id')
@@ -142,34 +143,6 @@ class EmployeeDashboard extends Component
             ->limit(5)
             ->get();
 
-        // LEADERBOARD 2: TOP 5 SALDO (SULTAN SAMPAH)
-        $leaderboardBalance = DB::table('users')
-            ->select(
-                'users.id',
-                'users.name',
-                'users.employee_code',
-                'divisions.name as division_name',
-                DB::raw('COALESCE((SELECT SUM(ti.subtotal) FROM transaction_items ti JOIN transactions t ON t.id = ti.transaction_id WHERE t.employee_id = users.id AND t.status = "'.\App\Enums\TransactionStatus::POSTED->value.'" AND t.deleted_at IS NULL), 0) as total_masuk'),
-                DB::raw('COALESCE((SELECT SUM(amount) FROM withdrawals WHERE employee_id = users.id AND status IN ("PENDING", "COMPLETED") AND deleted_at IS NULL), 0) as total_keluar')
-            )
-            ->leftJoin('divisions', 'users.division_id', '=', 'divisions.id')
-            ->whereNull('users.deleted_at')
-            ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('transactions')
-                    ->whereColumn('transactions.employee_id', 'users.id')
-                    ->whereNull('transactions.deleted_at')
-                    ->where('status', \App\Enums\TransactionStatus::POSTED->value);
-            })
-            ->orderByRaw('(total_masuk - total_keluar) DESC')
-            ->limit(5)
-            ->get()
-            ->map(function ($item) {
-                $item->total_uang = $item->total_masuk - $item->total_keluar;
-
-                return $item;
-            });
-
         $recentTransactions = Transaction::with('items.wasteType')
             ->where('employee_id', $user->id)
             ->latest('weighing_at')
@@ -182,7 +155,6 @@ class EmployeeDashboard extends Component
             'totalWeight',
             'recentTransactions',
             'leaderboardWeight',
-            'leaderboardBalance',
             'badge',
             'treesSaved',
             'carbonSaved'

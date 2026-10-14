@@ -86,7 +86,7 @@
             </div>
             <div class="flex flex-col items-center">
                 <p class="mb-16">HRGA,</p>
-                <p class="border-b border-black w-full pb-1 truncate px-1">{{ $withdrawal->officer->name }}</p>
+                <p class="border-b border-black w-full pb-1 truncate px-1">{{ $withdrawal->officer?->name }}</p>
             </div>
             <div class="flex flex-col items-center">
                 <p class="mb-16">Koperasi,</p>

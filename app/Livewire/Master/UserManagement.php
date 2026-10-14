@@ -122,7 +122,9 @@ class UserManagement extends Component
         }
 
         $user = User::findOrFail($id);
-        $user->update(['password' => Hash::make($user->employee_code)]);
+        $user->password = Hash::make($user->employee_code);
+        $user->must_change_password = true;
+        $user->save();
 
         ActivityLogger::log('reset_password', "Reset password karyawan: {$user->name} (NIK: {$user->employee_code}) ke default NIK", 'User', $user->id);
 
@@ -161,7 +163,7 @@ class UserManagement extends Component
             'name' => 'required|string|max:255',
             'email' => ['nullable', 'email', Rule::unique('users')->ignore($this->userId)],
             'division_id' => 'required|exists:divisions,id',
-            'role' => 'required|in:admin,petugas,admin_timbang,karyawan',
+            'role' => ['required', Rule::in(User::ROLES)],
         ];
 
         $this->validate($rules);
@@ -191,6 +193,7 @@ class UserManagement extends Component
             ]);
             $newUser->role = $this->role;
             $newUser->is_active = $this->is_active;
+            $newUser->must_change_password = true;
             $newUser->save();
 
             $msg = 'Karyawan baru berhasil didaftarkan!';

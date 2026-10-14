@@ -15,6 +15,9 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, SoftDeletes;
 
+    /** Semua role yang valid. Satu sumber buat validasi form & import. */
+    public const ROLES = ['admin', 'petugas', 'admin_timbang', 'karyawan'];
+
     /**
      * Kolom yang dapat diisi secara massal (Mass Assignment).
      */
@@ -37,6 +40,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'must_change_password' => 'boolean',
         ];
     }
 

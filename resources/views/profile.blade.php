@@ -11,6 +11,13 @@
                 </p>
             </div>
 
+            @if (auth()->user()->must_change_password)
+                <div role="alert"
+                    class="p-4 bg-amber-100 border-l-4 border-amber-500 text-amber-800 font-bold text-xs uppercase tracking-widest rounded-r-xl">
+                    ⚠️ Password Anda masih default (NIK). Ganti password dulu sebelum memakai aplikasi.
+                </div>
+            @endif
+
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
                 <div class="p-8 bg-white shadow-sm border border-slate-100 rounded-2xl h-fit">

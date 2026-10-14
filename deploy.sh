@@ -24,8 +24,7 @@ php artisan migrate --force
 
 echo "==> Refresh cache..."
 php artisan config:cache
+php artisan route:cache
 php artisan view:cache
-# ponytail: route:cache sengaja di-skip — routes/web.php masih pakai closure;
-# kalau nanti semua route sudah pakai controller/komponen, tambahkan di sini.
 
 echo "==> Deploy selesai! ✅"
