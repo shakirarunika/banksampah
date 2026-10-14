@@ -13,16 +13,6 @@
                     NIK: {{ $user->employee_code }} | Departemen: {{ $user->division->name ?? '-' }}
                 </p>
             </div>
-            <div class="flex flex-col sm:flex-row gap-2">
-                <a href="{{ route('ledger.mine') }}" wire:navigate
-                    class="px-5 py-3 bg-white border-2 border-emerald-600 text-emerald-700 rounded-xl font-black text-[10px] uppercase tracking-widest text-center hover:bg-emerald-50 transition">
-                    Riwayat Lengkap
-                </a>
-                <a href="{{ route('withdrawals.request') }}" wire:navigate
-                    class="px-5 py-3 bg-emerald-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest text-center hover:bg-emerald-700 transition">
-                    Ajukan Pencairan
-                </a>
-            </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-8">
@@ -43,6 +33,21 @@
                         </svg>
                         Update otomatis tiap timbangan diposting
                     </div>
+
+                    @if ($currentBalance >= 100000)
+                        <a href="{{ route('withdrawals.request') }}" wire:navigate
+                            class="mt-6 inline-flex w-full sm:w-auto items-center justify-center gap-2 min-h-[44px] px-5 py-3 bg-white text-emerald-700 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-emerald-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-white/60 transition">
+                            Ajukan Pencairan
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </a>
+                    @else
+                        <p class="mt-6 text-xs font-bold text-emerald-50 bg-white/10 rounded-xl px-4 py-3">
+                            Pencairan bisa diajukan mulai saldo Rp 100.000.
+                            Kurang Rp {{ number_format(100000 - $currentBalance, 0, ',', '.') }} lagi.
+                        </p>
+                    @endif
                 </div>
                 <div class="absolute -right-8 -bottom-8 w-32 h-32 bg-white opacity-10 rounded-full blur-xl"></div>
             </div>
@@ -94,9 +99,13 @@
                     <div class="p-5 md:p-6 border-b border-gray-50 flex justify-between items-center">
                         <h3 class="font-black text-gray-800 tracking-tight text-base md:text-lg">Riwayat Penimbangan
                         </h3>
-                        <span
-                            class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full uppercase">5
-                            Terakhir</span>
+                        <a href="{{ route('ledger.mine') }}" wire:navigate
+                            class="inline-flex items-center gap-1 min-h-[44px] px-3 -mr-3 text-xs font-black text-emerald-700 uppercase tracking-widest rounded-lg hover:text-emerald-900 hover:bg-emerald-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 transition">
+                            Lihat Semua
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </a>
                     </div>
 
                     <div class="hidden md:block overflow-x-auto">

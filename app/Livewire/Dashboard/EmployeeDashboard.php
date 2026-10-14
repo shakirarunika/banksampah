@@ -110,10 +110,10 @@ class EmployeeDashboard extends Component
         // LOGIKA BADGE PANGKAT
         $badge = [
             'name' => '🥉 Pemula',
-            'color' => 'bg-amber-600 text-white',
+            'color' => 'bg-amber-700 text-white',
         ];
         if ($totalWeight > 100) {
-            $badge = ['name' => '💎 Pahlawan Hijau', 'color' => 'bg-teal-500 text-white shadow-lg shadow-teal-200'];
+            $badge = ['name' => '💎 Pahlawan Hijau', 'color' => 'bg-teal-700 text-white shadow-lg shadow-teal-200'];
         } elseif ($totalWeight > 50) {
             $badge = ['name' => '🥇 Pejuang Lingkungan', 'color' => 'bg-yellow-400 text-yellow-900 shadow-md shadow-yellow-200'];
         } elseif ($totalWeight > 10) {
