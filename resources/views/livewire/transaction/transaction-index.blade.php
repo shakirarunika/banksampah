@@ -5,7 +5,15 @@
             <div x-data="{ show: true }" x-show="show" x-transition
                 class="p-4 bg-emerald-100 text-emerald-700 rounded-2xl shadow-sm border-l-4 border-emerald-500 font-bold text-sm flex justify-between items-center">
                 <span class="uppercase tracking-widest text-[10px]">{{ session('message') }}</span>
-                <button @click="show = false" class="font-black hover:text-emerald-900 transition text-lg">×</button>
+                <div class="flex items-center gap-3">
+                    @if (session()->has('print_id'))
+                        <a href="{{ route('transactions.print', session('print_id')) }}" target="_blank"
+                            class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition">
+                            🖨️ Cetak Struk
+                        </a>
+                    @endif
+                    <button @click="show = false" class="font-black hover:text-emerald-900 transition text-lg">×</button>
+                </div>
             </div>
         @endif
 
@@ -138,7 +146,7 @@
                     <tbody class="divide-y divide-slate-50">
                         @forelse($transactions as $trx)
                             <tr wire:key="trx-{{ $trx->id }}"
-                                class="hover:bg-emerald-50/20 transition-all {{ $trx->status === 'CANCELLED' ? 'bg-red-50/30 opacity-60' : '' }}">
+                                class="hover:bg-emerald-50/20 transition-all {{ $trx->status->value === 'CANCELLED' ? 'bg-red-50/30 opacity-60' : '' }}">
                                 <td class="p-6">
                                     <div class="text-[11px] font-black text-slate-800">
                                         {{ $trx->weighing_at->format('d M Y') }}</div>
@@ -147,8 +155,14 @@
                                 </td>
 
                                 <td class="p-6">
-                                    <div class="font-black text-slate-800 uppercase text-xs">
-                                        {{ $trx->employee?->name ?? 'User Terhapus' }}</div>
+                                    @if ($trx->employee && ! $trx->employee->trashed())
+                                        <a href="{{ route('ledger.show', $trx->employee_id) }}" wire:navigate
+                                            class="font-black text-slate-800 uppercase text-xs hover:text-emerald-600 hover:underline"
+                                            title="Lihat mutasi saldo">{{ $trx->employee->name }}</a>
+                                    @else
+                                        <div class="font-black text-slate-800 uppercase text-xs">
+                                            {{ $trx->employee?->name ?? 'User Terhapus' }}</div>
+                                    @endif
                                     <div class="text-[10px] font-bold text-emerald-600 font-mono mt-0.5">NIK:
                                         {{ $trx->employee?->employee_code ?? 'N/A' }}</div>
                                 </td>
@@ -177,9 +191,9 @@
                                 <td class="p-6 text-center">
                                     <span
                                         class="px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border
-                                        {{ $trx->status === 'POSTED'
+                                        {{ $trx->status->value === 'POSTED'
                                             ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
-                                            : ($trx->status === 'CANCELLED'
+                                            : ($trx->status->value === 'CANCELLED'
                                                 ? 'bg-red-100 text-red-700 border-red-200'
                                                 : 'bg-amber-100 text-amber-700 border-amber-200') }}">
                                         {{ $trx->status }}
@@ -188,7 +202,15 @@
 
                                 <td class="p-6">
                                     <div class="flex justify-center items-center gap-2">
-                                        @if ($trx->status !== 'CANCELLED')
+                                        <a href="{{ route('transactions.print', $trx->id) }}" target="_blank"
+                                            class="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                                            title="Cetak Struk">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                            </svg>
+                                        </a>
+                                        @if ($trx->status->value !== 'CANCELLED')
                                             <a href="{{ route('transactions.edit', $trx->id) }}" wire:navigate
                                                 class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
                                                 title="Edit Transaksi">

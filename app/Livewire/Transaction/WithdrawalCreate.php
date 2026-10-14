@@ -8,11 +8,28 @@ use App\Models\Withdrawal;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 #[Layout('layouts.app')]
 #[\Livewire\Attributes\Title('Pencairan Saldo')]
 class WithdrawalCreate extends Component
 {
+    use WithPagination;
+
+    public $history_search = '';
+
+    public $history_status = '';
+
+    public function updatingHistorySearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingHistoryStatus()
+    {
+        $this->resetPage();
+    }
+
     public $search_nik = '';
 
     public $employee;
@@ -109,11 +126,14 @@ class WithdrawalCreate extends Component
 
     public function render()
     {
-        // Tampilkan 5 riwayat terbaru di tabel bawah
         $recent_withdrawals = Withdrawal::with(['employee.division', 'officer'])
+            ->when($this->history_search, fn ($q) => $q->whereHas('employee', function ($e) {
+                $e->where('name', 'like', "%{$this->history_search}%")
+                    ->orWhere('employee_code', 'like', "%{$this->history_search}%");
+            }))
+            ->when($this->history_status, fn ($q) => $q->where('status', $this->history_status))
             ->latest()
-            ->limit(5)
-            ->get();
+            ->paginate(10);
 
         return view('livewire.transaction.withdrawal-create', compact('recent_withdrawals'));
     }

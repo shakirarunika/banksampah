@@ -232,8 +232,9 @@
                                     <tr class="hover:bg-emerald-50/20 transition-all"
                                         wire:key="user-{{ $u->id }}">
                                         <td class="p-6">
-                                            <div class="font-black text-slate-800 uppercase text-xs tracking-tight">
-                                                {{ $u->name }}</div>
+                                            <a href="{{ route('ledger.show', $u->id) }}" wire:navigate
+                                                class="font-black text-slate-800 uppercase text-xs tracking-tight hover:text-emerald-600 hover:underline"
+                                                title="Lihat mutasi saldo">{{ $u->name }}</a>
                                             <div class="text-[10px] font-bold text-emerald-600 font-mono mt-1">NIK:
                                                 {{ $u->employee_code }}</div>
                                         </td>

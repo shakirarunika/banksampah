@@ -121,10 +121,19 @@
         </div>
 
         <div class="mt-10 bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-            <div class="p-6 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
-                <h3 class="font-black text-slate-800 text-sm tracking-tight uppercase">5 Log Pencairan Terakhir</h3>
-                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Otoritas HRGA &
-                    Koperasi</span>
+            <div class="p-6 border-b border-slate-50 bg-slate-50/30 flex flex-col md:flex-row justify-between md:items-center gap-4">
+                <h3 class="font-black text-slate-800 text-sm tracking-tight uppercase">Riwayat Pencairan</h3>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input type="text" wire:model.live.debounce.400ms="history_search" placeholder="Cari nama / NIK..."
+                        aria-label="Cari riwayat pencairan"
+                        class="border-2 border-slate-200 rounded-xl px-4 py-2 text-xs font-bold focus:border-emerald-500 focus:ring-0">
+                    <select wire:model.live="history_status" aria-label="Filter status"
+                        class="border-2 border-slate-200 rounded-xl px-4 py-2 text-xs font-bold focus:border-emerald-500 focus:ring-0">
+                        <option value="">Semua Status</option>
+                        <option value="PENDING">PENDING</option>
+                        <option value="COMPLETED">COMPLETED</option>
+                    </select>
+                </div>
             </div>
 
             <div class="overflow-x-auto">
@@ -209,6 +218,10 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+
+            <div class="p-6 border-t border-slate-50">
+                {{ $recent_withdrawals->links() }}
             </div>
         </div>
     </div>

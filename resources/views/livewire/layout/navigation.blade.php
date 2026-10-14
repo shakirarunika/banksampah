@@ -65,6 +65,9 @@ new class extends Component {
                                             <x-dropdown-link :href="route('reconciliation.index')" wire:navigate class="text-blue-600 font-bold">
                                                 {{ __('Rekonsiliasi Bulanan') }}
                                             </x-dropdown-link>
+                                            <x-dropdown-link :href="route('reports.index')" wire:navigate class="text-emerald-600 font-bold">
+                                                {{ __('Laporan') }}
+                                            </x-dropdown-link>
                                         @endcan
                                     </x-slot>
                                 </x-dropdown>
@@ -177,6 +180,9 @@ new class extends Component {
                     </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('reconciliation.index')" :active="request()->routeIs('reconciliation.*')" wire:navigate class="text-blue-600 font-bold">
                         {{ __('Rekonsiliasi Bulanan') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')" wire:navigate class="text-emerald-600 font-bold">
+                        {{ __('Laporan') }}
                     </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('master.activity-log')" :active="request()->routeIs('master.activity-log')" wire:navigate class="text-violet-600 font-bold">
                         {{ __('Log Aktivitas') }}

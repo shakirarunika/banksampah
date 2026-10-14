@@ -131,13 +131,14 @@ class TransactionCreate extends Component
             // Gabungkan tanggal input dengan waktu saat ini agar urutan transaksi tetap rapi
             $weighingDateTime = Carbon::parse($this->form->transaction_date.' '.now()->format('H:i:s'));
 
-            $this->transactionService->createTransaction([
+            $transaction = $this->transactionService->createTransaction([
                 'employee_id' => $this->employee->id,
                 'officer_id' => auth()->id(),
                 'weighing_at' => $weighingDateTime,
             ], $this->form->items);
 
             session()->flash('message', 'Timbangan berhasil disimpan!');
+            session()->flash('print_id', $transaction->id);
 
             return redirect()->route('transactions.index');
         } catch (\Exception $e) {

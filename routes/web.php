@@ -5,9 +5,12 @@ use App\Livewire\Master\ActivityLogIndex;
 use App\Livewire\Master\DivisionManagement;
 use App\Livewire\Master\UserManagement;
 use App\Livewire\Master\WasteManagement;
+use App\Livewire\Report;
+use App\Livewire\Transaction\BalanceLedger;
 use App\Livewire\Transaction\TransactionCreate;
 use App\Livewire\Transaction\TransactionIndex;
 use App\Livewire\Transaction\WithdrawalCreate;
+use App\Models\Transaction;
 use App\Models\Withdrawal;
 use Illuminate\Support\Facades\Route;
 
@@ -45,6 +48,14 @@ Route::middleware(['auth'])->group(function () {
         })->name('withdrawals.print')->middleware('can:access-petugas');
         Route::get('/transaksi/{transaction}/edit', \App\Livewire\Transaction\TransactionEdit::class)->name('transactions.edit');
 
+        Route::get('/transaksi/cetak/{transaction}', function (Transaction $transaction) {
+            $transaction->load(['employee.division', 'officer', 'items.wasteType']);
+
+            return view('print.transaction', compact('transaction'));
+        })->name('transactions.print');
+
+        Route::get('/mutasi/{user}', BalanceLedger::class)->name('ledger.show');
+
         Route::get('/pencairan', WithdrawalCreate::class)->name('withdrawals.index');
     });
 
@@ -64,6 +75,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/vendor-sales/create', \App\Livewire\VendorSale\Form::class)->name('vendor-sales.create');
         Route::get('/vendor-sales/{id}/edit', \App\Livewire\VendorSale\Form::class)->name('vendor-sales.edit');
         Route::get('/reconciliation', \App\Livewire\VendorSale\Reconciliation::class)->name('reconciliation.index');
+        Route::get('/laporan', Report::class)->name('reports.index');
     });
 });
 

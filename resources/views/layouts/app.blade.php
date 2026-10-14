@@ -17,7 +17,9 @@
 
 <body class="font-sans antialiased bg-gray-50">
     <div class="min-h-screen">
-        <livewire:layout.navigation />
+        <div class="print:hidden">
+            <livewire:layout.navigation />
+        </div>
 
         @if (isset($header))
             <header class="bg-white shadow-sm">
@@ -31,7 +33,9 @@
             {{ $slot }}
         </main>
 
-        @include('layouts.partials.footer')
+        <div class="print:hidden">
+            @include('layouts.partials.footer')
+        </div>
     </div>
 </body>
 
