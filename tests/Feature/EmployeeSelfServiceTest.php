@@ -144,8 +144,36 @@ class EmployeeSelfServiceTest extends TestCase
             ->assertRedirect(route('dashboard', absolute: false));
 
         $this->assertFalse($this->employee->fresh()->must_change_password);
-        $this->actingAs($this->employee->fresh())->get(route('dashboard'))->assertOk();
+        $this->actingAs($this->employee->fresh())->get(route('dashboard'))->assertOk()
+            ->assertSee('Password berhasil diganti');
         $this->actingAs($this->employee->fresh())->get(route('profile'))->assertSee('Profile Information');
+    }
+
+    public function test_akun_wajib_ganti_password_tetap_bisa_kirim_request_livewire(): void
+    {
+        $this->employee->forceFill(['must_change_password' => true])->save();
+        $this->actingAs($this->employee);
+
+        // Endpoint update Livewire (dipakai tombol Simpan) gak boleh dilempar ke profil
+        $update = $this->withHeader('X-Livewire', 'true')->post(Livewire::getUpdateUri(), ['components' => []]);
+        $this->assertFalse($update->isRedirect(route('profile')), 'Request Livewire diblokir middleware');
+
+        // Header X-Livewire palsu gak bisa dipakai buat buka halaman lain
+        $this->withHeader('X-Livewire', 'true')->get(route('dashboard'))->assertRedirect(route('profile'));
+    }
+
+    public function test_ganti_password_biasa_menampilkan_notifikasi_sukses(): void
+    {
+        $this->actingAs($this->employee);
+
+        Volt::test('profile.update-password-form')
+            ->set('current_password', 'password')
+            ->set('password', 'password-baru-123')
+            ->set('password_confirmation', 'password-baru-123')
+            ->call('updatePassword')
+            ->assertHasNoErrors()
+            ->assertNoRedirect()
+            ->assertSee('Password berhasil diganti');
     }
 
     public function test_karyawan_baru_dan_reset_password_wajib_ganti_password(): void

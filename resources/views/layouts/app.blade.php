@@ -30,6 +30,13 @@
         @endif
 
         <main>
+            @if (session('flash_success'))
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 print:hidden">
+                    <div role="status" class="p-4 bg-emerald-50 border-l-4 border-emerald-600 text-emerald-800 text-sm font-bold rounded-r-xl">
+                        ✅ {{ session('flash_success') }}
+                    </div>
+                </div>
+            @endif
             {{ $slot }}
         </main>
 

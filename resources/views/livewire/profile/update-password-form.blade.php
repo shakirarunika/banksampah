@@ -13,11 +13,15 @@ new class extends Component
     public string $password = '';
     public string $password_confirmation = '';
 
+    public bool $saved = false;
+
     /**
      * Update the password for the currently authenticated user.
      */
     public function updatePassword(): void
     {
+        $this->saved = false;
+
         try {
             $validated = $this->validate([
                 'current_password' => ['required', 'string', 'current_password'],
@@ -44,6 +48,7 @@ new class extends Component
         $user->save();
 
         if ($wasForced) {
+            session()->flash('flash_success', 'Password berhasil diganti. Silakan gunakan password baru saat login berikutnya.');
             $this->redirect(route('dashboard', absolute: false), navigate: true);
 
             return;
@@ -51,7 +56,7 @@ new class extends Component
 
         $this->reset('current_password', 'password', 'password_confirmation');
 
-        $this->dispatch('password-updated');
+        $this->saved = true;
     }
 }; ?>
 
@@ -86,11 +91,14 @@ new class extends Component
         </div>
 
         <div class="flex items-center gap-4">
-            <x-primary-button>Simpan</x-primary-button>
-
-            <x-action-message class="me-3" on="password-updated">
-                Tersimpan.
-            </x-action-message>
+            <x-primary-button wire:loading.attr="disabled" wire:target="updatePassword">Simpan</x-primary-button>
+            <span wire:loading wire:target="updatePassword" class="text-sm text-gray-600">Menyimpan...</span>
         </div>
+
+        @if ($saved)
+            <div role="status" class="p-4 bg-emerald-50 border-l-4 border-emerald-600 text-emerald-800 text-sm font-bold rounded-r-xl">
+                ✅ Password berhasil diganti. Gunakan password baru saat login berikutnya.
+            </div>
+        @endif
     </form>
 </section>
