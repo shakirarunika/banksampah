@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\User;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -19,7 +20,7 @@ class UsersExport implements FromCollection, WithHeadings, WithMapping
     /**
      * Ambil data dari database
      */
-    public function collection()
+    public function collection(): Collection
     {
         // Kalau cuma butuh template, balikin koleksi kosong
         if ($this->isTemplate) {

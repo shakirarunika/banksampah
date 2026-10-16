@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\Division;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
@@ -15,7 +16,7 @@ class DivisionsExport implements FromCollection, WithHeadings
         $this->isTemplate = $isTemplate;
     }
 
-    public function collection()
+    public function collection(): Collection
     {
         return $this->isTemplate ? collect([]) : Division::all(['name']);
     }

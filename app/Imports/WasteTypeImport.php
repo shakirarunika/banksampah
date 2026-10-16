@@ -4,12 +4,13 @@ namespace App\Imports;
 
 use App\Models\WastePrice;
 use App\Models\WasteType;
+use Illuminate\Database\Eloquent\Model;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class WasteTypeImport implements ToModel, WithHeadingRow
 {
-    public function model(array $row)
+    public function model(array $row): ?Model
     {
         if (! is_numeric($row['harga_per_kg'] ?? null) || $row['harga_per_kg'] < 0) {
             throw new \Exception("Harga '{$row['harga_per_kg']}' untuk kode {$row['kode_sampah']} tidak valid (harus angka, minimal 0).");

@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\WasteType;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -16,7 +17,7 @@ class WasteTypeExport implements FromCollection, WithHeadings, WithMapping
         $this->isTemplate = $isTemplate;
     }
 
-    public function collection()
+    public function collection(): Collection
     {
         return $this->isTemplate ? collect([]) : WasteType::with('currentPrice')->get();
     }

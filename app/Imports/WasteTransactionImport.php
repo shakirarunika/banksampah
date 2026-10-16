@@ -17,7 +17,7 @@ class WasteTransactionImport implements ToCollection, WithHeadingRow
     /** Baris yang gagal diimpor, buat ditampilkan ke user setelah selesai. */
     public array $skipped = [];
 
-    public function collection(Collection $rows)
+    public function collection(Collection $rows): void
     {
         DB::beginTransaction();
         try {

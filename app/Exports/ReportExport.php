@@ -11,7 +11,7 @@ class ReportExport implements FromCollection, WithHeadings, WithMapping
 {
     public function __construct(protected Collection $rows) {}
 
-    public function collection()
+    public function collection(): Collection
     {
         return $this->rows;
     }

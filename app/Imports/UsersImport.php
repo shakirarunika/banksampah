@@ -4,13 +4,14 @@ namespace App\Imports;
 
 use App\Models\Division;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class UsersImport implements ToModel, WithHeadingRow
 {
-    public function model(array $row)
+    public function model(array $row): ?Model
     {
         // 1. Cari ID divisi berdasarkan nama yang diketik di Excel (Case Insensitive)
         $division = Division::where('name', 'like', '%'.$row['nama_divisi'].'%')->first();
