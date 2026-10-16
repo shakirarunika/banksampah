@@ -115,7 +115,18 @@ class EmployeeSelfServiceTest extends TestCase
         $this->employee->forceFill(['must_change_password' => true])->save();
 
         $this->actingAs($this->employee)->get(route('dashboard'))->assertRedirect(route('profile'));
-        $this->actingAs($this->employee)->get(route('profile'))->assertOk()->assertSee('Password Anda masih default');
+        $this->actingAs($this->employee)->get(route('profile'))->assertOk()
+            ->assertSee('Password Anda masih default')
+            ->assertSee($this->employee->employee_code)   // NIK tampil sebagai username
+            ->assertDontSee('Profile Information');       // form nama/email disembunyikan dulu
+
+        Volt::test('profile.update-password-form')
+            ->set('current_password', 'salah-total')
+            ->set('password', 'password-baru-123')
+            ->set('password_confirmation', 'password-baru-123')
+            ->call('updatePassword')
+            ->assertHasErrors(['current_password'])
+            ->assertSee('Password saat ini salah.');
 
         Volt::test('profile.update-password-form')
             ->set('current_password', 'password')
@@ -134,6 +145,7 @@ class EmployeeSelfServiceTest extends TestCase
 
         $this->assertFalse($this->employee->fresh()->must_change_password);
         $this->actingAs($this->employee->fresh())->get(route('dashboard'))->assertOk();
+        $this->actingAs($this->employee->fresh())->get(route('profile'))->assertSee('Profile Information');
     }
 
     public function test_karyawan_baru_dan_reset_password_wajib_ganti_password(): void

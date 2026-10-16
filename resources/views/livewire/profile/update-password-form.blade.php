@@ -24,6 +24,11 @@ new class extends Component
                 // NIK = password default, gampang ditebak
                 'password' => ['required', 'string', Password::defaults(), 'confirmed', Rule::notIn([Auth::user()->employee_code])],
             ], [
+                'current_password.required' => 'Password saat ini wajib diisi.',
+                'current_password.current_password' => 'Password saat ini salah.',
+                'password.required' => 'Password baru wajib diisi.',
+                'password.min' => 'Password baru minimal :min karakter.',
+                'password.confirmed' => 'Ulangi password baru tidak cocok.',
                 'password.not_in' => 'Password baru tidak boleh sama dengan NIK.',
             ]);
         } catch (ValidationException $e) {
@@ -53,38 +58,38 @@ new class extends Component
 <section>
     <header>
         <h2 class="text-lg font-medium text-gray-900">
-            {{ __('Update Password') }}
+            Ganti Password
         </h2>
 
         <p class="mt-1 text-sm text-gray-600">
-            {{ __('Ensure your account is using a long, random password to stay secure.') }}
+            Gunakan password minimal 8 karakter yang tidak mudah ditebak, dan jangan pakai NIK.
         </p>
     </header>
 
     <form wire:submit="updatePassword" class="mt-6 space-y-6">
         <div>
-            <x-input-label for="update_password_current_password" :value="__('Current Password')" />
+            <x-input-label for="update_password_current_password" value="Password Saat Ini" />
             <x-text-input wire:model="current_password" id="update_password_current_password" name="current_password" type="password" class="mt-1 block w-full" autocomplete="current-password" />
             <x-input-error :messages="$errors->get('current_password')" class="mt-2" />
         </div>
 
         <div>
-            <x-input-label for="update_password_password" :value="__('New Password')" />
+            <x-input-label for="update_password_password" value="Password Baru" />
             <x-text-input wire:model="password" id="update_password_password" name="password" type="password" class="mt-1 block w-full" autocomplete="new-password" />
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
 
         <div>
-            <x-input-label for="update_password_password_confirmation" :value="__('Confirm Password')" />
+            <x-input-label for="update_password_password_confirmation" value="Ulangi Password Baru" />
             <x-text-input wire:model="password_confirmation" id="update_password_password_confirmation" name="password_confirmation" type="password" class="mt-1 block w-full" autocomplete="new-password" />
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
         </div>
 
         <div class="flex items-center gap-4">
-            <x-primary-button>{{ __('Save') }}</x-primary-button>
+            <x-primary-button>Simpan</x-primary-button>
 
             <x-action-message class="me-3" on="password-updated">
-                {{ __('Saved.') }}
+                Tersimpan.
             </x-action-message>
         </div>
     </form>

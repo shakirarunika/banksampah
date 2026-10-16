@@ -22,7 +22,23 @@
 
                 <div class="p-8 bg-white shadow-sm border border-slate-100 rounded-2xl h-fit">
                     <div class="max-w-xl">
-                        <livewire:profile.update-profile-information-form />
+                        @if (auth()->user()->must_change_password)
+                            {{-- Fokus ganti password dulu: cukup tampilkan identitas akun, tanpa form email --}}
+                            <h2 class="text-lg font-medium text-gray-900">Informasi Akun</h2>
+                            <p class="mt-1 text-sm text-gray-600">Gunakan NIK di bawah sebagai username saat login.</p>
+                            <dl class="mt-6 space-y-6">
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-700">Nama</dt>
+                                    <dd class="mt-1 text-base font-bold text-slate-800">{{ auth()->user()->name }}</dd>
+                                </div>
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-700">Username (NIK)</dt>
+                                    <dd class="mt-1 text-base font-bold text-slate-800 font-mono">{{ auth()->user()->employee_code }}</dd>
+                                </div>
+                            </dl>
+                        @else
+                            <livewire:profile.update-profile-information-form />
+                        @endif
                     </div>
                 </div>
 
