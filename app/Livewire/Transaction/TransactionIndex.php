@@ -5,7 +5,9 @@ namespace App\Livewire\Transaction;
 use App\Helpers\ActivityLogger;
 use App\Imports\WasteTransactionImport;
 use App\Models\Transaction;
+use App\Models\User;
 use App\Services\TransactionService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -29,6 +31,28 @@ class TransactionIndex extends Component
     }
 
     public $search = '';
+
+    // Format Y-m dari input type="month"; kosong = semua bulan
+    public $month = '';
+
+    public $sortField = 'weighing_at';
+
+    public $sortDirection = 'desc';
+
+    public function updatingSearch(): void { $this->resetPage(); }
+
+    public function updatingMonth(): void { $this->resetPage(); }
+
+    public function sortBy(string $field): void
+    {
+        if (! in_array($field, ['weighing_at', 'name', 'employee_code'], true)) {
+            return;
+        }
+
+        $this->sortDirection = $this->sortField === $field && $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        $this->sortField = $field;
+        $this->resetPage();
+    }
 
     public $file_import;
 
@@ -93,12 +117,27 @@ class TransactionIndex extends Component
 
     public function render()
     {
+        // Properti publik bisa diubah dari browser, jadi arah sort dipaksa asc/desc
+        $dir = $this->sortDirection === 'asc' ? 'asc' : 'desc';
+
         $transactions = Transaction::with(['employee.division', 'items.wasteType', 'officer'])
             ->whereHas('employee', function ($q) {
                 $q->where('name', 'like', "%{$this->search}%")
                     ->orWhere('employee_code', 'like', "%{$this->search}%");
             })
-            ->latest()
+            ->when(preg_match('/^\d{4}-\d{2}$/', $this->month), function ($q) {
+                $start = Carbon::createFromFormat('Y-m-d', $this->month.'-01')->startOfDay();
+                $q->where('weighing_at', '>=', $start)->where('weighing_at', '<', $start->copy()->addMonth());
+            })
+            ->when(
+                in_array($this->sortField, ['name', 'employee_code'], true),
+                fn ($q) => $q->orderBy(
+                    User::withTrashed()->select($this->sortField)->whereColumn('users.id', 'transactions.employee_id'),
+                    $dir
+                )->orderBy('weighing_at', 'desc'),
+                fn ($q) => $q->orderBy('weighing_at', $dir)
+            )
+            ->orderBy('id', 'desc')
             ->paginate(10);
 
         return view('livewire.transaction.transaction-index', [

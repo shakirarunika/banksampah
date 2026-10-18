@@ -124,6 +124,15 @@
                         class="w-full pl-10 pr-4 py-3 bg-white border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
                 </div>
 
+                <div class="flex items-center gap-2 w-full md:w-auto">
+                    <input type="month" wire:model.live="month" aria-label="Filter bulan penimbangan"
+                        class="w-full md:w-auto px-4 py-3 bg-white border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
+                    @if ($month)
+                        <button type="button" wire:click="$set('month', '')"
+                            class="px-3 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-red-600">Semua</button>
+                    @endif
+                </div>
+
                 <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                     Total: {{ $transactions->total() }} Transaksi
                 </div>
@@ -134,8 +143,21 @@
                     <thead>
                         <tr
                             class="bg-slate-50/80 text-slate-500 font-black uppercase text-[10px] tracking-[0.2em] border-b border-slate-100">
-                            <th class="p-6">Waktu Penimbangan</th>
-                            <th class="p-6">Karyawan (Nasabah)</th>
+                            @php
+                                $arrow = fn ($f) => $sortField === $f ? ($sortDirection === 'asc' ? ' ▲' : ' ▼') : '';
+                            @endphp
+                            <th class="p-6">
+                                <button type="button" wire:click="sortBy('weighing_at')"
+                                    class="uppercase tracking-[0.2em] hover:text-emerald-600">Waktu Penimbangan{{ $arrow('weighing_at') }}</button>
+                            </th>
+                            <th class="p-6">
+                                Karyawan:
+                                <button type="button" wire:click="sortBy('name')"
+                                    class="uppercase tracking-[0.2em] hover:text-emerald-600">Nama{{ $arrow('name') }}</button>
+                                /
+                                <button type="button" wire:click="sortBy('employee_code')"
+                                    class="uppercase tracking-[0.2em] hover:text-emerald-600">NIK{{ $arrow('employee_code') }}</button>
+                            </th>
                             <th class="p-6">Rincian Sampah</th>
                             <th class="p-6 text-right">Berat (Kg)</th>
                             <th class="p-6 text-right">Nilai (Rp)</th>
