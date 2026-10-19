@@ -49,12 +49,12 @@
                 <p class="mt-3 text-3xl font-black text-slate-800 tracking-tighter">{{ number_format($totalOutboundKg, 2, ',', '.') }} <span class="text-sm font-bold text-slate-400">kg</span></p>
             </div>
 
-            <div class="bg-white rounded-3xl shadow-sm p-6 border-2 border-slate-50 {{ $shrinkageKg > 0 ? 'border-t-red-400' : 'border-t-emerald-400' }}">
-                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Penyusutan</h3>
-                <p class="mt-3 text-3xl font-black tracking-tighter {{ $shrinkageKg > 0 ? 'text-red-500' : 'text-emerald-500' }}">
-                    {{ number_format($shrinkageKg, 2, ',', '.') }} <span class="text-sm font-bold {{ $shrinkageKg > 0 ? 'text-red-300' : 'text-emerald-300' }}">kg</span>
+            <div class="bg-white rounded-3xl shadow-sm p-6 border-2 border-slate-50 {{ $diffKg < 0 ? 'border-t-red-400' : 'border-t-emerald-400' }}">
+                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Selisih Berat</h3>
+                <p class="mt-3 text-3xl font-black tracking-tighter {{ $diffKg < 0 ? 'text-red-500' : 'text-emerald-500' }}">
+                    {{ number_format($diffKg, 2, ',', '.') }} <span class="text-sm font-bold {{ $diffKg < 0 ? 'text-red-300' : 'text-emerald-300' }}">kg</span>
                 </p>
-                <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">{{ number_format($shrinkagePercent, 1, ',', '.') }}% dari Inbound</p>
+                <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">{{ number_format($diffPercent, 1, ',', '.') }}% dari setoran</p>
             </div>
 
             <div class="bg-white rounded-3xl shadow-sm p-6 border-2 border-slate-50 border-t-red-400">
@@ -74,7 +74,7 @@
         <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
             <div class="p-6 border-b border-slate-50 bg-slate-50/30">
                 <h3 class="font-black text-slate-800 text-sm tracking-tight uppercase">Rincian Berat per Kategori Sampah</h3>
-                <p class="text-[10px] text-slate-500 font-bold mt-1">Sampah gabungan dipilah ulang sebelum dijual, jadi selisih per kategori wajar beda (minus = hasil pilahan). Keuntungan dihitung dari total.</p>
+                <p class="text-[10px] text-slate-500 font-bold mt-1">Sampah gabungan dipilah ulang sebelum dijual, jadi selisih per kategori wajar beda (Selisih = dijual − disetor; plus = hasil pilahan masuk kategori ini, minus = kategori ini dipilah ke kategori lain atau susut). Keuntungan dihitung dari total.</p>
             </div>
 
             <div class="overflow-x-auto">
@@ -108,7 +108,7 @@
                             <td class="px-6 py-5 border-r border-slate-200 text-center text-slate-500">Total Berat</td>
                             <td class="px-4 py-5 border-r border-slate-200 text-right text-emerald-700">{{ number_format($totalInboundKg, 2, ',', '.') }} <span class="text-[9px] opacity-50">kg</span></td>
                             <td class="px-4 py-5 border-r border-slate-200 text-right text-orange-700">{{ number_format($totalOutboundKg, 2, ',', '.') }} <span class="text-[9px] opacity-50">kg</span></td>
-                            <td class="px-4 py-5 text-right {{ $shrinkageKg > 0 ? 'text-red-600' : 'text-slate-700' }}">{{ number_format($shrinkageKg, 2, ',', '.') }} <span class="text-[9px] opacity-50">kg</span></td>
+                            <td class="px-4 py-5 text-right {{ $diffKg < 0 ? 'text-red-600' : 'text-slate-700' }}">{{ number_format($diffKg, 2, ',', '.') }} <span class="text-[9px] opacity-50">kg</span></td>
                         </tr>
                         <tr>
                             <td colspan="3" class="px-6 py-3 border-r border-t border-slate-200 text-right text-orange-600">Penjualan Vendor (Kotor)</td>

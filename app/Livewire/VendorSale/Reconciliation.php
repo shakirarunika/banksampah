@@ -51,8 +51,9 @@ class Reconciliation extends Component
         $netOutboundPrice = $outboundSales->sum('net_amount'); // Net total untuk hitung profit margin
 
         // 3. Hitung Kalkulasi
-        $shrinkageKg = $totalInboundKg - $totalOutboundKg;
-        $shrinkagePercent = $totalInboundKg > 0 ? ($shrinkageKg / $totalInboundKg) * 100 : 0;
+        // Dijual - disetor: plus = berat bertambah (stok lama ikut terjual), minus = susut
+        $diffKg = $totalOutboundKg - $totalInboundKg;
+        $diffPercent = $totalInboundKg > 0 ? ($diffKg / $totalInboundKg) * 100 : 0;
 
         $profitMargin = $netOutboundPrice - $totalInboundPrice;
 
@@ -67,7 +68,7 @@ class Reconciliation extends Component
                 'name' => $type->name,
                 'inbound_kg' => $inKg,
                 'outbound_kg' => $outKg,
-                'diff_kg' => $inKg - $outKg,
+                'diff_kg' => $outKg - $inKg,
             ];
         });
 
@@ -78,8 +79,8 @@ class Reconciliation extends Component
             'totalOutboundPrice',
             'totalDeductions',
             'netOutboundPrice',
-            'shrinkageKg',
-            'shrinkagePercent',
+            'diffKg',
+            'diffPercent',
             'profitMargin',
             'comparisonData'
         ))->layout('layouts.app');
