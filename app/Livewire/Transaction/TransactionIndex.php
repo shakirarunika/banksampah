@@ -64,10 +64,14 @@ class TransactionIndex extends Component
         ]);
 
         try {
-            Excel::import(new WasteTransactionImport, $this->file_import->getRealPath());
+            $import = new WasteTransactionImport;
+            Excel::import($import, $this->file_import->getRealPath());
 
             $this->reset('file_import');
             $this->dispatch('file-imported');
+            if ($import->skipped) {
+                session()->flash('error', 'Impor selesai, tapi baris berikut dilewati: '.implode(' | ', $import->skipped));
+            }
             session()->flash('message', 'Sip! Data historis berhasil diimpor ke dalam sistem.');
         } catch (\Exception $e) {
             session()->flash('error', 'Mohon maaf, terjadi kesalahan pada file Excel: '.$e->getMessage());

@@ -33,13 +33,8 @@ class WasteTransactionImport implements ToCollection, WithHeadingRow
                 }
 
                 // 2. Cari Jenis Sampah (Header di Excel harus: jenis_sampah)
-                // Exact match dulu biar "Plastik" gak nyangkut ke "Plastik Keras"
-                $waste = WasteType::with('currentPrice')
-                    ->where('name', $row['jenis_sampah'])
-                    ->first()
-                    ?? WasteType::with('currentPrice')
-                        ->where('name', 'like', '%'.$row['jenis_sampah'].'%')
-                        ->first();
+                // Harus persis sama — LIKE bikin sel kosong / "PET" nyangkut ke jenis yang salah
+                $waste = WasteType::where('name', trim($row['jenis_sampah'] ?? ''))->first();
                 if (! $waste) {
                     $this->skipped[] = "Baris {$rowNumber}: jenis sampah '{$row['jenis_sampah']}' tidak ditemukan";
 

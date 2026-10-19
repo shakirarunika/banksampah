@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Transaction;
 
-use App\Imports\WasteTransactionImport;
 use App\Livewire\Forms\TransactionForm;
 use App\Models\User;
 use App\Models\WasteType;
@@ -10,52 +9,16 @@ use App\Services\TransactionService;
 use Carbon\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
-use Livewire\WithFileUploads;
-use Maatwebsite\Excel\Facades\Excel;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 #[Layout('layouts.app')]
 #[\Livewire\Attributes\Title('Input Timbangan')]
 class TransactionCreate extends Component
 {
-    use WithFileUploads;
-
     protected TransactionService $transactionService;
 
     public function boot(TransactionService $transactionService): void
     {
         $this->transactionService = $transactionService;
-    }
-
-    public $file_import;
-
-    public function downloadTemplate(): BinaryFileResponse
-    {
-        $filePath = public_path('templates/template_bank_sampah.xlsx');
-
-        // Pastikan file template sudah disiapkan di folder public/templates/
-        return response()->download($filePath, 'Template_Impor_Bank_Sampah.xlsx');
-    }
-
-    public function importExcel()
-    {
-        $this->validate([
-            'file_import' => 'required|mimes:xlsx,xls,csv|max:10240',
-        ]);
-
-        try {
-            $import = new WasteTransactionImport;
-            Excel::import($import, $this->file_import->getRealPath());
-
-            if ($import->skipped) {
-                session()->flash('error', 'Impor selesai, tapi baris berikut dilewati: '.implode(' | ', $import->skipped));
-            }
-            session()->flash('message', 'Sip! Data berhasil diimpor.');
-
-            return redirect()->route('transactions.index');
-        } catch (\Exception $e) {
-            session()->flash('error', 'Mohon maaf, terjadi kesalahan pada file Excel: '.$e->getMessage());
-        }
     }
 
     // 1. Data Karyawan & Transaksi

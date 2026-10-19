@@ -94,6 +94,19 @@ class SecurityFixesTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_batas_salah_login_dihitung_per_nik_bukan_per_ip(): void
+    {
+        $user = User::factory()->create(['employee_code' => 'ABC123']);
+
+        Volt::test('pages.auth.login')
+            ->set('form.employee_code', $user->employee_code)
+            ->set('form.password', 'salah')
+            ->call('login');
+
+        // Kunci tanpa IP: ganti X-Forwarded-For gak bikin hitungan mulai dari nol
+        $this->assertSame(1, \Illuminate\Support\Facades\RateLimiter::attempts('abc123'));
+    }
+
     public function test_halaman_register_sudah_ditutup(): void
     {
         $this->get('/register')->assertNotFound();

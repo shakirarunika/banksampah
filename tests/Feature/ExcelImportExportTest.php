@@ -88,10 +88,36 @@ class ExcelImportExportTest extends TestCase
             ['77002', 'Kardus', 2.5, '2026-01-10'],
             ['77002', 'Kardus', -1, '2026-01-10'],   // berat minus dilewati
             ['99999', 'Kardus', 1, '2026-01-10'],    // NIK tidak ada dilewati
+            ['77002', 'Kard', 1, '2026-01-10'],      // nama gak persis dilewati, bukan ditebak
         ]));
 
         $this->assertSame(1, Transaction::count());
         $this->assertEquals(5000, $employee->balance);
-        $this->assertCount(2, $import->skipped);
+        $this->assertCount(3, $import->skipped);
+    }
+
+    public function test_import_karyawan_gak_ubah_role_status_dan_akun_terhapus(): void
+    {
+        $this->actingAs($admin = User::factory()->create(['role' => 'admin', 'employee_code' => '1001']));
+        $resign = User::factory()->create(['employee_code' => '1002', 'is_active' => false]);
+        $deleted = User::factory()->create(['employee_code' => '1003']);
+        $deleted->delete();
+        Division::forceCreate(['name' => 'GUDANG']);
+
+        // Tanpa kolom role & nama_divisi kosong
+        Excel::import(new UsersImport, $this->xlsx([
+            ['nik', 'nama_lengkap', 'email', 'nama_divisi'],
+            ['1001', 'Admin', 'a@x.com', ''],
+            ['1002', 'Resign', 'r@x.com', ''],
+            ['1003', 'Dihapus', 'd@x.com', ''],
+            ['1004', 'Baru', 'b@x.com', ''],
+        ]));
+
+        $this->assertSame('admin', $admin->fresh()->role);
+        $this->assertFalse($resign->fresh()->is_active);
+        $this->assertTrue(User::onlyTrashed()->where('employee_code', '1003')->exists());
+        $baru = User::where('employee_code', '1004')->first();
+        $this->assertSame('karyawan', $baru->role);
+        $this->assertNull($baru->division_id);
     }
 }

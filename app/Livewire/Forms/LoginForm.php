@@ -57,6 +57,7 @@ class LoginForm extends Form
 
     protected function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->employee_code).'|'.request()->ip());
+        // Tanpa IP: trustProxies('*') bikin IP bisa dipalsuin lewat X-Forwarded-For
+        return Str::transliterate(Str::lower($this->employee_code));
     }
 }

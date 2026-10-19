@@ -13,29 +13,39 @@ class UsersImport implements ToModel, WithHeadingRow
 {
     public function model(array $row): ?Model
     {
-        // 1. Cari ID divisi berdasarkan nama yang diketik di Excel (Case Insensitive)
-        $division = Division::where('name', 'like', '%'.$row['nama_divisi'].'%')->first();
-
-        // 2. Gunakan firstOrNew dan assign explicit
-        $user = User::firstOrNew(['employee_code' => $row['nik']]);
+        // withTrashed: NIK unik di DB, akun yang sudah dihapus dilewati (sama kayak karyawan:sync)
+        // daripada bikin baru dan bentrok
+        $user = User::withTrashed()->firstOrNew(['employee_code' => $row['nik']]);
+        if ($user->trashed()) {
+            return null;
+        }
+        $isNew = ! $user->exists;
 
         $user->fill([
             'name' => $row['nama_lengkap'],
             'email' => $row['email'] ?? $row['nik'].'@dasiaya.com',
-            'division_id' => $division->id ?? null,
         ]);
 
-        // TIPS: Hanya set password jika user-nya beneran baru (biar password lama gak keriset)
-        if (! $user->exists) {
+        // Nama divisi kosong jangan dicari — LIKE '%%' nyangkut ke divisi pertama
+        $divisionName = trim($row['nama_divisi'] ?? '');
+        if ($divisionName !== '') {
+            $user->division_id = Division::where('name', 'like', '%'.$divisionName.'%')->value('id');
+        }
+
+        // Role cuma diubah kalau kolomnya diisi, biar Excel tanpa kolom role gak nurunin admin.
+        // Role ngaco/typo jatuh ke karyawan.
+        $role = strtolower(trim($row['role'] ?? ''));
+        if ($role !== '') {
+            $user->role = in_array($role, User::ROLES, true) ? $role : 'karyawan';
+        }
+
+        // User lama: status aktif & password gak disentuh (karyawan resign tetap nonaktif)
+        if ($isNew) {
+            $user->role ??= 'karyawan';
+            $user->is_active = true;
             $user->password = Hash::make($row['nik']);
             $user->must_change_password = true;
         }
-
-        // Set kolom yang tidak ada di $fillable secara manual
-        // Role ngaco/typo di Excel jatuh ke karyawan, jangan disimpan apa adanya
-        $role = strtolower(trim($row['role'] ?? ''));
-        $user->role = in_array($role, User::ROLES, true) ? $role : 'karyawan';
-        $user->is_active = true;
 
         $user->save();
 
