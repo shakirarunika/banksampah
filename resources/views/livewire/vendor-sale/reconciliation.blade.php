@@ -72,26 +72,19 @@
 
         <!-- Detail Table (Perbandingan per Kategori) -->
         <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-            <div class="p-6 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
-                <h3 class="font-black text-slate-800 text-sm tracking-tight uppercase">Rincian Perbandingan per Kategori Sampah</h3>
+            <div class="p-6 border-b border-slate-50 bg-slate-50/30">
+                <h3 class="font-black text-slate-800 text-sm tracking-tight uppercase">Rincian Berat per Kategori Sampah</h3>
+                <p class="text-[10px] text-slate-500 font-bold mt-1">Sampah gabungan dipilah ulang sebelum dijual, jadi selisih per kategori wajar beda (minus = hasil pilahan). Keuntungan dihitung dari total.</p>
             </div>
-            
+
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr>
-                            <th rowspan="2" class="p-4 border-b border-r border-slate-100 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50">Kategori</th>
-                            <th colspan="2" class="p-4 border-b border-r border-emerald-100 text-center text-[10px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50/50">Inbound (Masuk)</th>
-                            <th colspan="2" class="p-4 border-b border-r border-orange-100 text-center text-[10px] font-black text-orange-600 uppercase tracking-widest bg-orange-50/50">Outbound (Keluar)</th>
-                            <th colspan="2" class="p-4 border-b border-blue-100 text-center text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50/50">Selisih</th>
-                        </tr>
-                        <tr>
-                            <th class="px-4 py-3 border-b border-r border-emerald-100 text-right text-[9px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-50/50">Berat</th>
-                            <th class="px-4 py-3 border-b border-r border-emerald-100 text-right text-[9px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-50/50">Nilai (Rp)</th>
-                            <th class="px-4 py-3 border-b border-r border-orange-100 text-right text-[9px] font-black text-orange-500 uppercase tracking-widest bg-orange-50/50">Berat</th>
-                            <th class="px-4 py-3 border-b border-r border-orange-100 text-right text-[9px] font-black text-orange-500 uppercase tracking-widest bg-orange-50/50">Nilai (Rp)</th>
-                            <th class="px-4 py-3 border-b border-r border-blue-100 text-right text-[9px] font-black text-blue-500 uppercase tracking-widest bg-blue-50/50">Penyusutan</th>
-                            <th class="px-4 py-3 border-b border-blue-100 text-right text-[9px] font-black text-blue-500 uppercase tracking-widest bg-blue-50/50">Margin</th>
+                            <th class="p-4 border-b border-r border-slate-100 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50">Kategori</th>
+                            <th class="p-4 border-b border-r border-emerald-100 text-right text-[10px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50/50">Setoran Karyawan</th>
+                            <th class="p-4 border-b border-r border-orange-100 text-right text-[10px] font-black text-orange-600 uppercase tracking-widest bg-orange-50/50">Dijual ke Vendor</th>
+                            <th class="p-4 border-b border-blue-100 text-right text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50/50">Selisih</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-50">
@@ -99,49 +92,42 @@
                             <tr class="hover:bg-slate-50 transition-colors">
                                 <td class="px-6 py-4 whitespace-nowrap border-r border-slate-50 font-black text-slate-700 text-xs uppercase">{{ $data['name'] }}</td>
                                 <td class="px-4 py-4 whitespace-nowrap border-r border-slate-50 text-right font-black text-emerald-600 text-xs">{{ number_format($data['inbound_kg'], 2, ',', '.') }} <span class="text-[9px] opacity-50">kg</span></td>
-                                <td class="px-4 py-4 whitespace-nowrap border-r border-slate-50 text-right font-black text-emerald-600 text-xs">{{ number_format($data['inbound_price'], 0, ',', '.') }}</td>
-                                
                                 <td class="px-4 py-4 whitespace-nowrap border-r border-slate-50 text-right font-black text-orange-600 text-xs">{{ number_format($data['outbound_kg'], 2, ',', '.') }} <span class="text-[9px] opacity-50">kg</span></td>
-                                <td class="px-4 py-4 whitespace-nowrap border-r border-slate-50 text-right font-black text-orange-600 text-xs">{{ number_format($data['outbound_price'], 0, ',', '.') }}</td>
-                                
-                                <td class="px-4 py-4 whitespace-nowrap border-r border-slate-50 text-right font-black text-xs {{ $data['shrinkage_kg'] > 0 ? 'text-red-500' : 'text-slate-400' }}">
-                                    {{ number_format($data['shrinkage_kg'], 2, ',', '.') }} <span class="text-[9px] opacity-50">kg</span>
-                                </td>
-                                <td class="px-4 py-4 whitespace-nowrap text-right font-black text-xs {{ $data['profit'] > 0 ? 'text-blue-600' : 'text-red-500' }}">
-                                    {{ number_format($data['profit'], 0, ',', '.') }}
-                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap text-right font-black text-xs text-slate-500">{{ number_format($data['diff_kg'], 2, ',', '.') }} <span class="text-[9px] opacity-50">kg</span></td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="p-12 text-center">
-                                    <div class="text-4xl mb-3">📊</div>
-                                    <div class="text-xs font-black text-slate-400 uppercase tracking-widest">
-                                        Belum ada data untuk periode ini
-                                    </div>
+                                <td colspan="4" class="p-12 text-center">
+                                    <div class="text-xs font-black text-slate-400 uppercase tracking-widest">Belum ada data untuk periode ini</div>
                                 </td>
                             </tr>
                         @endforelse
                     </tbody>
                     <tfoot class="bg-slate-50 font-black text-xs uppercase tracking-widest border-t border-slate-200">
                         <tr>
-                            <td class="px-6 py-5 border-r border-slate-200 text-center text-slate-500">TOTAL {{ $totalDeductions > 0 ? 'KOTOR' : '' }}</td>
+                            <td class="px-6 py-5 border-r border-slate-200 text-center text-slate-500">Total Berat</td>
                             <td class="px-4 py-5 border-r border-slate-200 text-right text-emerald-700">{{ number_format($totalInboundKg, 2, ',', '.') }} <span class="text-[9px] opacity-50">kg</span></td>
-                            <td class="px-4 py-5 border-r border-slate-200 text-right text-emerald-700">{{ number_format($totalInboundPrice, 0, ',', '.') }}</td>
                             <td class="px-4 py-5 border-r border-slate-200 text-right text-orange-700">{{ number_format($totalOutboundKg, 2, ',', '.') }} <span class="text-[9px] opacity-50">kg</span></td>
-                            <td class="px-4 py-5 border-r border-slate-200 text-right text-orange-700">{{ number_format($totalOutboundPrice, 0, ',', '.') }}</td>
-                            <td class="px-4 py-5 border-r border-slate-200 text-right {{ $shrinkageKg > 0 ? 'text-red-600' : 'text-slate-700' }}">{{ number_format($shrinkageKg, 2, ',', '.') }} <span class="text-[9px] opacity-50">kg</span></td>
-                            <td class="px-4 py-5 text-right {{ ($totalOutboundPrice - $totalInboundPrice) > 0 ? 'text-blue-700' : 'text-red-600' }}">{{ number_format($totalOutboundPrice - $totalInboundPrice, 0, ',', '.') }}</td>
+                            <td class="px-4 py-5 text-right {{ $shrinkageKg > 0 ? 'text-red-600' : 'text-slate-700' }}">{{ number_format($shrinkageKg, 2, ',', '.') }} <span class="text-[9px] opacity-50">kg</span></td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" class="px-6 py-3 border-r border-t border-slate-200 text-right text-orange-600">Penjualan Vendor (Kotor)</td>
+                            <td class="px-4 py-3 border-t border-slate-200 text-right text-orange-700">Rp {{ number_format($totalOutboundPrice, 0, ',', '.') }}</td>
                         </tr>
                         @if($totalDeductions > 0)
                         <tr>
-                            <td colspan="6" class="px-6 py-3 border-r border-t border-slate-200 text-right text-red-500">POTONGAN VENDOR</td>
-                            <td class="px-4 py-3 border-t border-slate-200 text-right text-red-500">- {{ number_format($totalDeductions, 0, ',', '.') }}</td>
-                        </tr>
-                        <tr class="bg-blue-50/50">
-                            <td colspan="6" class="px-6 py-4 border-r border-t border-slate-200 text-right text-blue-600">TOTAL MARGIN BERSIH</td>
-                            <td class="px-4 py-4 border-t border-slate-200 text-right font-black text-blue-700 text-sm">{{ number_format($profitMargin, 0, ',', '.') }}</td>
+                            <td colspan="3" class="px-6 py-3 border-r border-t border-slate-200 text-right text-red-500">Potongan Vendor</td>
+                            <td class="px-4 py-3 border-t border-slate-200 text-right text-red-500">- Rp {{ number_format($totalDeductions, 0, ',', '.') }}</td>
                         </tr>
                         @endif
+                        <tr>
+                            <td colspan="3" class="px-6 py-3 border-r border-t border-slate-200 text-right text-emerald-600">Dibayar ke Tabungan Karyawan</td>
+                            <td class="px-4 py-3 border-t border-slate-200 text-right text-emerald-700">- Rp {{ number_format($totalInboundPrice, 0, ',', '.') }}</td>
+                        </tr>
+                        <tr class="bg-blue-50/50">
+                            <td colspan="3" class="px-6 py-4 border-r border-t border-slate-200 text-right text-blue-600">Keuntungan Bank Sampah</td>
+                            <td class="px-4 py-4 border-t border-slate-200 text-right text-sm {{ $profitMargin > 0 ? 'text-blue-700' : 'text-red-600' }}">Rp {{ number_format($profitMargin, 0, ',', '.') }}</td>
+                        </tr>
                     </tfoot>
                 </table>
             </div>

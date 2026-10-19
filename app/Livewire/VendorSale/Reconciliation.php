@@ -56,23 +56,18 @@ class Reconciliation extends Component
 
         $profitMargin = $netOutboundPrice - $totalInboundPrice;
 
-        // 4. Data per Kategori
+        // 4. Data per Kategori — berat saja; sampah gabungan dipilah ulang sebelum dijual,
+        // jadi margin per kategori tidak bermakna (gabungan minus, kardus/PET plus). Margin hanya di total.
         $wasteTypes = WasteType::all();
         $comparisonData = $wasteTypes->map(function ($type) use ($inboundItems, $outboundItems) {
             $inKg = $inboundItems->where('waste_type_id', $type->id)->sum('weight_kg');
-            $inPrice = $inboundItems->where('waste_type_id', $type->id)->sum('subtotal');
-
             $outKg = $outboundItems->where('waste_type_id', $type->id)->sum('weight_kg');
-            $outPrice = $outboundItems->where('waste_type_id', $type->id)->sum('total_price');
 
             return [
                 'name' => $type->name,
                 'inbound_kg' => $inKg,
-                'inbound_price' => $inPrice,
                 'outbound_kg' => $outKg,
-                'outbound_price' => $outPrice,
-                'shrinkage_kg' => $inKg - $outKg,
-                'profit' => $outPrice - $inPrice,
+                'diff_kg' => $inKg - $outKg,
             ];
         });
 
@@ -82,6 +77,7 @@ class Reconciliation extends Component
             'totalOutboundKg',
             'totalOutboundPrice',
             'totalDeductions',
+            'netOutboundPrice',
             'shrinkageKg',
             'shrinkagePercent',
             'profitMargin',

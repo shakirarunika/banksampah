@@ -61,15 +61,8 @@ class Form extends Component
             $index = $parts[0];
             $field = $parts[1];
 
-            if ($field === 'waste_type_id') {
-                $waste = WasteType::with('currentPrice')->find($value);
-                if ($waste && $waste->currentPrice) {
-                    $this->items[$index]['price_per_kg'] = $waste->currentPrice->price_per_kg;
-                } else {
-                    $this->items[$index]['price_per_kg'] = 0;
-                }
-                $this->calculateItemTotal($index);
-            } elseif ($field === 'weight_kg' || $field === 'price_per_kg') {
+            // Harga jual vendor diisi manual — jangan pakai harga beli karyawan, nanti margin kebaca 0
+            if ($field === 'weight_kg' || $field === 'price_per_kg') {
                 $this->calculateItemTotal($index);
             }
         }
