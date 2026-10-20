@@ -119,12 +119,13 @@ class TransactionIndex extends Component
         }
     }
 
-    public function render()
+    // Dipakai tabel & export supaya hasil Excel = yang tampil di layar
+    private function filteredQuery()
     {
         // Properti publik bisa diubah dari browser, jadi arah sort dipaksa asc/desc
         $dir = $this->sortDirection === 'asc' ? 'asc' : 'desc';
 
-        $transactions = Transaction::with(['employee.division', 'items.wasteType', 'officer'])
+        return Transaction::with(['employee.division', 'items.wasteType', 'officer'])
             ->whereHas('employee', function ($q) {
                 $q->where('name', 'like', "%{$this->search}%")
                     ->orWhere('employee_code', 'like', "%{$this->search}%");
@@ -141,8 +142,22 @@ class TransactionIndex extends Component
                 )->orderBy('weighing_at', 'desc'),
                 fn ($q) => $q->orderBy('weighing_at', $dir)
             )
-            ->orderBy('id', 'desc')
-            ->paginate(10);
+            ->orderBy('id', 'desc');
+    }
+
+    public function exportExcel()
+    {
+        $suffix = preg_match('/^\d{4}-\d{2}$/', $this->month) ? $this->month : 'semua';
+
+        return Excel::download(
+            new \App\Exports\TransactionsExport($this->filteredQuery()->get()),
+            'riwayat_penimbangan_'.$suffix.'_'.now()->format('d_m_Y').'.xlsx'
+        );
+    }
+
+    public function render()
+    {
+        $transactions = $this->filteredQuery()->paginate(10);
 
         return view('livewire.transaction.transaction-index', [
             'transactions' => $transactions,

@@ -133,8 +133,15 @@
                     @endif
                 </div>
 
-                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    Total: {{ $transactions->total() }} Transaksi
+                <div class="flex items-center gap-4">
+                    <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        Total: {{ $transactions->total() }} Transaksi
+                    </div>
+                    <button type="button" wire:click="exportExcel" wire:loading.attr="disabled" wire:target="exportExcel"
+                        class="px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest disabled:opacity-50 transition-all">
+                        <span wire:loading.remove wire:target="exportExcel">Unduh Excel</span>
+                        <span wire:loading wire:target="exportExcel">Menyiapkan...</span>
+                    </button>
                 </div>
             </div>
 
