@@ -100,7 +100,7 @@
                             @enderror
                         </div>
 
-                        <button wire:click="addItem"
+                        <button wire:click="addItem" wire:loading.attr="disabled"
                             class="w-full py-3 bg-emerald-600 text-white font-black rounded-lg uppercase tracking-widest text-xs hover:bg-blue-700 transition shadow-md shadow-blue-200">
                             + Masukkan Keranjang
                         </button>
@@ -169,7 +169,23 @@
                             </span>
                         </div>
 
-                        <button wire:click="saveTransaction"
+                        @if ($duplicateWarning)
+                            <div role="alert" class="mb-4 p-4 bg-amber-50 border-l-4 border-amber-500 text-amber-800 rounded text-xs">
+                                <p class="font-black uppercase tracking-widest mb-2">Kemungkinan setoran dobel</p>
+                                <ul class="list-disc pl-4 space-y-1 font-bold">
+                                    @foreach ($duplicateWarning as $dup)
+                                        <li>{{ $dup }}</li>
+                                    @endforeach
+                                </ul>
+                                <p class="mt-2">Cek lagi keranjangnya. Kalau memang setoran terpisah, lanjut simpan.</p>
+                                <button wire:click="saveTransaction(true)" wire:loading.attr="disabled"
+                                    class="mt-3 w-full py-2 bg-amber-600 text-white font-black rounded-lg uppercase tracking-widest text-xs hover:bg-amber-700 transition disabled:opacity-50">
+                                    Tetap Simpan
+                                </button>
+                            </div>
+                        @endif
+
+                        <button wire:click="saveTransaction" wire:loading.attr="disabled"
                             class="w-full py-4 bg-green-600 text-white font-black rounded-lg uppercase tracking-widest text-sm hover:bg-green-700 transition shadow-lg shadow-green-200 disabled:opacity-50 disabled:cursor-not-allowed"
                             {{ count($form->items ?? []) == 0 || !$employee ? 'disabled' : '' }}>
                             SIMPAN TRANSAKSI

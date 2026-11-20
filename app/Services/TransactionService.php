@@ -70,6 +70,34 @@ class TransactionService
     }
 
     /**
+     * Setoran yang sudah tercatat (POSTED) dengan karyawan, tanggal timbang, jenis &
+     * berat yang sama persis — tanda kemungkinan input/import dobel.
+     *
+     * @return array<int, string> deskripsi tiap item kembar, kosong kalau aman
+     */
+    public function findDuplicates(int $employeeId, $weighingAt, array $items): array
+    {
+        $found = [];
+        foreach ($items as $item) {
+            $match = TransactionItem::query()
+                ->where('waste_type_id', $item['waste_type_id'])
+                ->where('weight_kg', $item['weight'])
+                ->whereHas('transaction', fn ($q) => $q
+                    ->where('employee_id', $employeeId)
+                    ->where('status', TransactionStatus::POSTED)
+                    ->whereDate('weighing_at', \Carbon\Carbon::parse($weighingAt)->toDateString()))
+                ->with('wasteType', 'transaction')
+                ->first();
+
+            if ($match) {
+                $found[] = "{$match->wasteType->name} {$match->weight_kg} kg (trx #{$match->transaction_id}, diinput {$match->transaction->created_at->format('d-m-Y H:i')})";
+            }
+        }
+
+        return $found;
+    }
+
+    /**
      * Harga jenis sampah di tanggal timbang. Gagal kalau jenis itu belum berlaku
      * (belum ada harga) atau sudah diganti list baru di tanggal tersebut.
      *

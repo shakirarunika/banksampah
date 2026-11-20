@@ -26,6 +26,9 @@ class TransactionCreate extends Component
 
     public $employee;
 
+    // Daftar setoran kembar yang ditemukan; terisi = petugas harus konfirmasi dulu
+    public array $duplicateWarning = [];
+
     public TransactionForm $form;
 
     // Fungsi mount untuk mengatur default tanggal ke hari ini
@@ -59,6 +62,7 @@ class TransactionCreate extends Component
             return;
         }
 
+        $this->duplicateWarning = [];
         $this->form->addItem($waste, $price);
     }
 
@@ -66,6 +70,8 @@ class TransactionCreate extends Component
     // jenis yang gak berlaku di tanggal itu dibuang dari keranjang.
     public function updated($property)
     {
+        $this->duplicateWarning = [];
+
         if ($property !== 'form.transaction_date' || ! strtotime((string) $this->form->transaction_date)) {
             return;
         }
@@ -91,11 +97,14 @@ class TransactionCreate extends Component
 
     public function removeItem($index)
     {
+        $this->duplicateWarning = [];
         $this->form->removeItem($index);
     }
 
-    public function saveTransaction()
+    public function saveTransaction(bool $confirmed = false)
     {
+        $this->duplicateWarning = [];
+
         $throttleKey = 'transaction-submit-'.auth()->id();
         // env() di sini bakal null kalau config di-cache — wajib lewat config()
         $maxAttempts = (int) config('app.throttle.transaction.limit');
@@ -124,6 +133,23 @@ class TransactionCreate extends Component
 
         // Jalankan validasi khusus tanggal pada form object
         $this->form->validate();
+
+        // Peringatan (bukan blokir): bisa saja memang dua setoran dengan berat sama
+        if (! $confirmed) {
+            $inCart = collect($this->form->items)
+                ->groupBy(fn ($i) => $i['waste_type_id'].'|'.(float) $i['weight'])
+                ->filter(fn ($g) => $g->count() > 1)
+                ->map(fn ($g) => "{$g[0]['waste_name']} {$g[0]['weight']} kg ada {$g->count()}x di keranjang")
+                ->values()->all();
+
+            $this->duplicateWarning = array_merge($inCart, $this->transactionService->findDuplicates(
+                $this->employee->id, $this->form->transaction_date, $this->form->items
+            ));
+
+            if ($this->duplicateWarning) {
+                return;
+            }
+        }
 
         try {
             // Gabungkan tanggal input dengan waktu saat ini agar urutan transaksi tetap rapi

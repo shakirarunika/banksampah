@@ -71,6 +71,15 @@ class WasteTransactionImport implements ToCollection, WithHeadingRow
                     continue;
                 }
 
+                // Setoran persis sama (NIK, tanggal, jenis, berat) sudah ada → kemungkinan file
+                // ke-import dua kali. Dilewati; kalau memang setoran terpisah, input manual.
+                $dup = app(TransactionService::class)->findDuplicates($user->id, $weighingAt, [['waste_type_id' => $waste->id, 'weight' => $weight]]);
+                if ($dup) {
+                    $this->skipped[] = "Baris {$rowNumber}: kemungkinan dobel, sudah ada {$dup[0]}";
+
+                    continue;
+                }
+
                 // 4. Simpan lewat service biar harga & validasinya sama kayak input manual
                 app(TransactionService::class)->createTransaction([
                     'employee_id' => $user->id,

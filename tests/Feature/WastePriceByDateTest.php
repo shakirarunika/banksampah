@@ -91,6 +91,24 @@ class WastePriceByDateTest extends TestCase
             ->assertSet('form.items', []);
     }
 
+    public function test_setoran_kembar_diperingatkan_dulu_baru_tersimpan_setelah_konfirmasi(): void
+    {
+        $this->timbang($this->baru, '2026-10-10 09:00:00'); // sudah ada Kardus 2 kg di 10 Okt
+
+        $page = \Livewire\Livewire::actingAs($this->officer)
+            ->test(\App\Livewire\Transaction\TransactionCreate::class)
+            ->set('employee', $this->employee)
+            ->set('form.transaction_date', '2026-10-10')
+            ->set('form.selected_waste', $this->baru->id)->set('form.weight', 2)->call('addItem')
+            ->call('saveTransaction');
+
+        $this->assertCount(1, $page->get('duplicateWarning'));
+        $this->assertSame(1, \App\Models\Transaction::count());
+
+        $page->call('saveTransaction', true)->assertRedirect(route('transactions.index'));
+        $this->assertSame(2, \App\Models\Transaction::count());
+    }
+
     public function test_harga_masa_depan_belum_jadi_harga_sekarang(): void
     {
         WastePrice::create(['waste_type_id' => $this->baru->id, 'price_per_kg' => 9999, 'effective_from' => now()->addMonth()]);

@@ -97,6 +97,21 @@ class ExcelImportExportTest extends TestCase
         $this->assertCount(3, $import->skipped);
     }
 
+    public function test_import_file_yang_sama_dua_kali_gak_bikin_setoran_dobel(): void
+    {
+        $employee = User::factory()->create(['employee_code' => '77003', 'division_id' => Division::forceCreate(['name' => 'X'])->id]);
+        $this->actingAs(User::factory()->create(['role' => 'admin']));
+        Excel::import(new WasteTypeImport, $this->xlsx([['kode_sampah', 'nama_sampah', 'satuan', 'harga_per_kg'], ['KRD', 'Kardus Uji', 'kg', 2000]]));
+        $rows = [['nik', 'jenis_sampah', 'berat', 'tanggal'], ['77003', 'Kardus Uji', 1.5, now()->toDateString()]];
+
+        Excel::import(new WasteTransactionImport, $this->xlsx($rows));
+        Excel::import($second = new WasteTransactionImport, $this->xlsx($rows));
+
+        $this->assertSame(1, Transaction::count());
+        $this->assertEquals(3000, $employee->balance);
+        $this->assertStringContainsString('kemungkinan dobel', $second->skipped[0]);
+    }
+
     public function test_import_karyawan_gak_ubah_role_status_dan_akun_terhapus(): void
     {
         $this->actingAs($admin = User::factory()->create(['role' => 'admin', 'employee_code' => '1001']));
