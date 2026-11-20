@@ -79,7 +79,7 @@
                                 <option value="">-- PILIH JENIS SAMPAH --</option>
                                 @foreach ($wasteTypes as $wt)
                                     <option value="{{ $wt->id }}">{{ $wt->name }} (Rp
-                                        {{ number_format($wt->currentPrice->price_per_kg ?? 0) }}/Kg)</option>
+                                        {{ number_format($wt->price_on_date ?? 0) }}/Kg)</option>
                                 @endforeach
                             </select>
                             @error('form.selected_waste')
@@ -212,7 +212,7 @@
                                             <td class="py-2 font-bold text-gray-700 uppercase text-xs">
                                                 {{ $wt->name }}</td>
                                             <td class="py-2 text-right font-black text-emerald-600">Rp
-                                                {{ number_format($wt->currentPrice->price_per_kg ?? 0) }} <span
+                                                {{ number_format($wt->price_on_date ?? 0) }} <span
                                                     class="text-[9px] text-gray-400">/Kg</span></td>
                                         </tr>
                                     @endforeach

@@ -31,12 +31,13 @@ class TransactionService
                 throw new Exception('Berat sampah harus lebih dari 0.');
             }
 
-            $waste = WasteType::with('currentPrice')->find($item['waste_type_id'] ?? null);
+            $waste = WasteType::find($item['waste_type_id'] ?? null);
             if (! $waste) {
                 throw new Exception('Jenis sampah tidak valid.');
             }
 
-            $items[$i]['price'] = $waste->currentPrice->price_per_kg ?? 0;
+            // Harga ikut tanggal timbang, bukan harga hari ini (penting buat input backdate)
+            $items[$i]['price'] = $this->priceFor($waste, $data['weighing_at']);
             $items[$i]['subtotal'] = $item['weight'] * $items[$i]['price'];
         }
 
@@ -66,6 +67,23 @@ class TransactionService
             DB::rollBack();
             throw $e;
         }
+    }
+
+    /**
+     * Harga jenis sampah di tanggal timbang. Gagal kalau jenis itu belum berlaku
+     * (belum ada harga) atau sudah diganti list baru di tanggal tersebut.
+     *
+     * @throws Exception
+     */
+    public function priceFor(WasteType $waste, $weighingAt): float
+    {
+        $date = \Carbon\Carbon::parse($weighingAt);
+
+        if (! WasteType::whereKey($waste->id)->usableOn($date)->exists()) {
+            throw new Exception("Jenis sampah '{$waste->name}' tidak berlaku pada tanggal {$date->format('d-m-Y')}.");
+        }
+
+        return $waste->priceAt($date);
     }
 
     /**

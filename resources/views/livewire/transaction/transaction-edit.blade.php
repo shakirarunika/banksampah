@@ -40,7 +40,7 @@
                                     class="w-full bg-white border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-emerald-500">
                                     @foreach ($waste_types as $type)
                                         <option value="{{ $type->id }}">{{ $type->name }} (Rp
-                                            {{ number_format($type->currentPrice->price_per_kg ?? 0) }})</option>
+                                            {{ number_format($type->price_on_date ?? 0) }})</option>
                                     @endforeach
                                 </select>
                             </div>

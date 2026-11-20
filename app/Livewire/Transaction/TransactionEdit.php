@@ -17,15 +17,12 @@ class TransactionEdit extends Component
 
     public $items = []; // Untuk nampung list sampah yang diedit
 
-    public $waste_types;
-
     public $employee_name;
 
     public function mount(Transaction $transaction)
     {
         $this->transaction = $transaction->load('items', 'employee');
         $this->employee_name = $transaction->employee->name;
-        $this->waste_types = WasteType::all();
 
         // Load item yang sudah ada ke dalam array temporary
         foreach ($transaction->items as $item) {
@@ -68,8 +65,8 @@ class TransactionEdit extends Component
                 if ($original && $original->waste_type_id == $item['waste_type_id']) {
                     $price = $original->price_at_time;
                 } else {
-                    $waste = WasteType::with('currentPrice')->find($item['waste_type_id']);
-                    $price = $waste->currentPrice->price_per_kg ?? 0;
+                    $price = app(\App\Services\TransactionService::class)
+                        ->priceFor(WasteType::find($item['waste_type_id']), $this->transaction->weighing_at);
                 }
 
                 $pricedItems[] = [
@@ -116,6 +113,14 @@ class TransactionEdit extends Component
 
     public function render()
     {
-        return view('livewire.transaction.transaction-edit');
+        // Pilihan = jenis yang berlaku di tanggal timbang + jenis yang sudah ada di transaksi ini
+        $date = $this->transaction->weighing_at;
+        $existing = $this->transaction->items->pluck('waste_type_id');
+
+        return view('livewire.transaction.transaction-edit', [
+            'waste_types' => WasteType::withPriceOn($date, WasteType::where(
+                fn ($q) => $q->usableOn($date)->orWhereIn('id', $existing)
+            )),
+        ]);
     }
 }

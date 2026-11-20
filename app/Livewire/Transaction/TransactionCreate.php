@@ -43,7 +43,7 @@ class TransactionCreate extends Component
 
     public function addItem()
     {
-        $waste = WasteType::with('currentPrice')->find($this->form->selected_waste);
+        $waste = WasteType::find($this->form->selected_waste);
 
         if (! $waste) {
             session()->flash('error', 'Jenis sampah tidak valid.');
@@ -51,7 +51,42 @@ class TransactionCreate extends Component
             return;
         }
 
-        $this->form->addItem($waste);
+        try {
+            $price = $this->transactionService->priceFor($waste, $this->form->transaction_date);
+        } catch (\Exception $e) {
+            session()->flash('error', $e->getMessage());
+
+            return;
+        }
+
+        $this->form->addItem($waste, $price);
+    }
+
+    // Tanggal timbang diganti: harga di keranjang ikut tanggal baru,
+    // jenis yang gak berlaku di tanggal itu dibuang dari keranjang.
+    public function updated($property)
+    {
+        if ($property !== 'form.transaction_date' || ! strtotime((string) $this->form->transaction_date)) {
+            return;
+        }
+
+        $this->form->selected_waste = '';
+        $dropped = [];
+        foreach ($this->form->items as $i => $item) {
+            try {
+                $price = $this->transactionService->priceFor(WasteType::find($item['waste_type_id']), $this->form->transaction_date);
+                $this->form->items[$i]['price'] = $price;
+                $this->form->items[$i]['subtotal'] = $item['weight'] * $price;
+            } catch (\Exception $e) {
+                $dropped[] = $item['waste_name'];
+                unset($this->form->items[$i]);
+            }
+        }
+        $this->form->items = array_values($this->form->items);
+
+        if ($dropped) {
+            session()->flash('error', 'Dihapus dari keranjang karena tidak berlaku di tanggal ini: '.implode(', ', $dropped));
+        }
     }
 
     public function removeItem($index)
@@ -111,7 +146,8 @@ class TransactionCreate extends Component
 
     public function render()
     {
-        $wasteTypes = WasteType::with('currentPrice')->get();
+        $date = strtotime((string) $this->form->transaction_date) ? $this->form->transaction_date : now();
+        $wasteTypes = WasteType::withPriceOn($date, WasteType::usableOn($date));
 
         return view('livewire.transaction.transaction-create', [
             'wasteTypes' => $wasteTypes,

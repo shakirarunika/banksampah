@@ -63,6 +63,14 @@ class WasteTransactionImport implements ToCollection, WithHeadingRow
                 // Set jam biar gak 00:00 semua (pake jam sekarang aja biar rapi)
                 $weighingAt = $tanggalParsed->setHour(now()->hour)->setMinute(now()->minute);
 
+                // Nama bisa kembar antara list lama & list baru (8 Okt): pilih yang berlaku di tanggal timbang
+                $waste = WasteType::where('name', $waste->name)->usableOn($weighingAt)->first();
+                if (! $waste) {
+                    $this->skipped[] = "Baris {$rowNumber}: jenis sampah '{$row['jenis_sampah']}' tidak berlaku pada tanggal {$weighingAt->format('d-m-Y')}";
+
+                    continue;
+                }
+
                 // 4. Simpan lewat service biar harga & validasinya sama kayak input manual
                 app(TransactionService::class)->createTransaction([
                     'employee_id' => $user->id,

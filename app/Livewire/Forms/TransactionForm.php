@@ -23,7 +23,7 @@ class TransactionForm extends Form
         $this->transaction_date = now()->format('Y-m-d');
     }
 
-    public function addItem($waste)
+    public function addItem($waste, $price)
     {
         $this->validate([
             'selected_waste' => 'required',
@@ -34,7 +34,6 @@ class TransactionForm extends Form
             'weight.min' => 'Berat minimal harus 0.01 kg.',
         ]);
 
-        $price = $waste->currentPrice->price_per_kg ?? 0;
         $subtotal = $this->weight * $price;
 
         $this->items[] = [

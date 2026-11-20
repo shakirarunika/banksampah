@@ -80,15 +80,16 @@ class ExcelImportExportTest extends TestCase
         $admin = User::factory()->create(['role' => 'admin']);
         $employee = User::factory()->create(['employee_code' => '77002', 'division_id' => Division::forceCreate(['name' => 'X'])->id]);
         $this->actingAs($admin);
-        Excel::import(new WasteTypeImport, $this->xlsx([['kode_sampah', 'nama_sampah', 'satuan', 'harga_per_kg'], ['KRD', 'Kardus', 'kg', 2000]]));
+        Excel::import(new WasteTypeImport, $this->xlsx([['kode_sampah', 'nama_sampah', 'satuan', 'harga_per_kg'], ['KRD', 'Kardus Uji', 'kg', 2000]]));
 
         $import = new WasteTransactionImport;
+        $tgl = now()->toDateString(); // jenis baru harganya mulai hari ini
         Excel::import($import, $this->xlsx([
             ['nik', 'jenis_sampah', 'berat', 'tanggal'],
-            ['77002', 'Kardus', 2.5, '2026-01-10'],
-            ['77002', 'Kardus', -1, '2026-01-10'],   // berat minus dilewati
-            ['99999', 'Kardus', 1, '2026-01-10'],    // NIK tidak ada dilewati
-            ['77002', 'Kard', 1, '2026-01-10'],      // nama gak persis dilewati, bukan ditebak
+            ['77002', 'Kardus Uji', 2.5, $tgl],
+            ['77002', 'Kardus Uji', -1, $tgl],   // berat minus dilewati
+            ['99999', 'Kardus Uji', 1, $tgl],    // NIK tidak ada dilewati
+            ['77002', 'Kard', 1, $tgl],      // nama gak persis dilewati, bukan ditebak
         ]));
 
         $this->assertSame(1, Transaction::count());
